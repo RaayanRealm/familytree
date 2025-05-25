@@ -25,6 +25,9 @@ The **Family Tree Website** helps families organize and visualize their lineage.
 git clone https://github.com/RaayanRealm/familytree.git
 cd familytree
 ```
+## How to run
+- nodemon index.js
+- npm run dev
 
 ## ✨ Contributions
 Feel free to open issues or pull requests to enhance the project.
