@@ -24,3 +24,11 @@ The **Family Tree Website** helps families organize and visualize their lineage.
 ```bash
 git clone https://github.com/RaayanRealm/familytree.git
 cd familytree
+```
+
+## ✨ Contributions
+Feel free to open issues or pull requests to enhance the project.
+## 📜 License
+This project is licensed under MIT License – Free to use and modify.
+## 📧 Contact
+For queries, contact raayany@outlook.com.
