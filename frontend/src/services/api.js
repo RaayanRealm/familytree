@@ -35,3 +35,8 @@ export const deleteFamilyMember = async (id) => {
   const response = await axios.delete(`${API_URL}/members/${id}`);
   return response.data;
 };
+
+export const getRecentMembers = async () => {
+  const response = await axios.get(`${API_URL}/members/recent`);
+  return response.data.slice(0, 5); // Return only the last 5 members
+}

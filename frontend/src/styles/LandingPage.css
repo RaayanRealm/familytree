@@ -1,0 +1,59 @@
+.carousel-card {
+    display: flex;
+    flex-direction: column;
+    /* ✅ Stack items */
+    align-items: center;
+    text-align: center;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+}
+
+.carousel-card img {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 10px;
+}
+
+.carousel-info h3 {
+    font-size: 20px;
+    margin-top: 10px;
+    color: #333;
+}
+
+.carousel-info .bio {
+    font-size: 14px;
+    color: #555;
+    margin-top: 5px;
+    max-width: 250px;
+    /* ✅ Control width */
+}
+
+.landing-page h1 {
+    font-size: 36px;
+    text-align: center;
+    color: #007bff;
+    margin-bottom: 20px;
+}
+
+.carousel-info a {
+    text-decoration: none;
+    color: #007bff;
+    font-weight: bold;
+}
+
+.carousel-info a:hover {
+    text-decoration: underline;
+}
+
+.carousel-card a img {
+    transition: transform 0.3s ease;
+}
+
+.carousel-card a img:hover {
+    transform: scale(1.05);
+    /* ✅ Adds hover effect */
+}

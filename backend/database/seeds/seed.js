@@ -18,9 +18,10 @@ exports.seed = async function (knex) {
       current_location: "San Francisco, USA",
       occupation: "Software Engineer",
       nationality: "American",
-      phone: "1234567890",
+      phone: "1234557890",
       email: "john.doe@example.com",
       profile_picture: "/images/ajay.jpg",
+      biography: "John is an experienced engineer with a passion for innovation."
     },
     {
       first_name: "Jane",
@@ -31,16 +32,53 @@ exports.seed = async function (knex) {
       current_location: "San Francisco, USA",
       occupation: "Doctor",
       nationality: "American",
-      phone: "9876543210",
+      phone: "9876543290",
       email: "jane.doe@example.com",
       profile_picture: "/images/neetu.jpg",
+      biography: "Jane is a compassionate doctor working in the field of pediatrics."
     },
+    {
+      first_name: "Ajay", last_name: "Sharma", gender: "Male", dob: "1980-05-10",
+      place_of_birth: "Delhi, India", current_location: "Mumbai, India",
+      occupation: "Engineer", nationality: "Indian", phone: "1234567890",
+      email: "ajay.sharma@example.com", profile_picture: "/images/ajay.jpg",
+      biography: "Ajay is an experienced engineer with a passion for innovation."
+    },
+
+    {
+      first_name: "Neetu", last_name: "Sharma", gender: "Female", dob: "1985-07-15",
+      place_of_birth: "Mumbai, India", current_location: "Mumbai, India",
+      occupation: "Doctor", nationality: "Indian", phone: "9876543210",
+      email: "neetu.sharma@example.com", profile_picture: "/images/neetu.jpg",
+      biography: "Neetu is a compassionate doctor working in the field of pediatrics."
+    },
+
+    {
+      first_name: "Vikram", last_name: "Singh", gender: "Male", dob: "1975-09-20",
+      place_of_birth: "Chennai, India", current_location: "Bangalore, India",
+      occupation: "Professor", nationality: "Indian", phone: "2233445566",
+      email: "vikram.singh@example.com", profile_picture: "/images/ajay.jpg",
+      biography: "Vikram is a professor specializing in physics research."
+    },
+
+    {
+      first_name: "Megha", last_name: "Verma", gender: "Female", dob: "1990-11-12",
+      place_of_birth: "Kolkata, India", current_location: "Delhi, India",
+      occupation: "Artist", nationality: "Indian", phone: "3344556677",
+      email: "megha.verma@example.com", profile_picture: "/images/neetu.jpg",
+      biography: "Megha is an accomplished painter whose works are displayed globally."
+    },
+
   ]).returning("id");
 
 
   await knex("relationships").insert([
-    { person_id: 1, relative_id: 2, relationship_type: "Spouse" },
-    { person_id: 2, relative_id: 1, relationship_type: "Spouse" },
+    { person_id: persons[0].id, relative_id: persons[1].id, relationship_type: "Spouse" },
+    { person_id: persons[1].id, relative_id: persons[0].id, relationship_type: "Spouse" },
+    { person_id: persons[2].id, relative_id: persons[3].id, relationship_type: "Spouse" },
+    { person_id: persons[3].id, relative_id: persons[2].id, relationship_type: "Spouse" },
+    { person_id: persons[4].id, relative_id: persons[5].id, relationship_type: "Spouse" },
+    { person_id: persons[5].id, relative_id: persons[4].id, relationship_type: "Spouse" },
   ]);
 
 

@@ -12,6 +12,23 @@ router.get("/members", async (req, res) => {
   }
 });
 
+// Get recent family members (last 5 added)
+router.get("/members/recent", async (req, res) => {
+  try {
+    const recentMembers = await db("persons")
+      .select("id", "first_name", "last_name", "profile_picture", "biography", "created_at")
+      .orderBy("created_at", "desc")
+      .limit(5);
+    if (!recentMembers.length) {
+      throw new Error("No recent members found");
+    }
+
+    res.json(recentMembers);
+  } catch (error) {
+    res.status(500).json({ error: error.message }); // ✅ Send precise error message
+  }
+});
+
 // Get a specific family member by ID
 router.get("/members/:id", async (req, res) => {
   try {

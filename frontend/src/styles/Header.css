@@ -1,0 +1,43 @@
+.header {
+    background-color: #01a982;
+    padding: 15px;
+    text-align: center;
+    color: #ffffff;
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 28px;
+}
+
+nav ul {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+nav ul li {
+    position: relative;
+}
+
+nav ul li a,
+nav ul li span {
+    color: white;
+    text-decoration: none;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+nav ul .dropdown-menu {
+    display: none;
+    position: absolute;
+    background-color: #01a982;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.dropdown:hover .dropdown-menu {
+    display: block;
+}
