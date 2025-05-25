@@ -1,0 +1,50 @@
+.member-profile {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 20px;
+  border-radius: 10px;
+  background-color: #f9f9f9;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.profile-header img {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile-info {
+  flex: 1;
+}
+
+.biography h3,
+.relations h3 {
+  margin-top: 20px;
+  border-bottom: 2px solid #ccc;
+  padding-bottom: 5px;
+}
+
+.relations ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.relations li {
+  margin: 5px 0;
+}
+
+.relations li a {
+  text-decoration: none;
+  color: #007bff;
+}
+
+.relations li a:hover {
+  text-decoration: underline;
+}
