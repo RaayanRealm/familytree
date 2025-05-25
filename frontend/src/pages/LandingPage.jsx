@@ -12,8 +12,26 @@ const LandingPage = () => {
 
     return (
         <div className="landing-page">
-            <h1>Welcome to the Family Database</h1>
-            <RecentMembersCarousel members={recentMembers} />
+            {/* ✅ Hero Section */}
+            <section className="hero-section">
+                <h1>Welcome to Your Family Tree</h1>
+                <p>Discover your roots and explore family connections.</p>
+            </section>
+
+            {/* ✅ Recent Members Carousel */}
+            <section className="carousel-container">
+                <RecentMembersCarousel members={recentMembers} />
+            </section>
+
+            {/* ✅ Grid Sections */}
+            <section className="grid-layout">
+                <div className="grid-item"><a href="/family/paternal">Paternal Tree</a></div>
+                <div className="grid-item"><a href="/family/maternal">Maternal Tree</a></div>
+                <div className="grid-item"><a href="/events">Events</a></div>
+                <div className="grid-item"><a href="/stories">Stories</a></div>
+                <div className="grid-item"><a href="/achievements">Achievements</a></div>
+                <div className="grid-item"><a href="/search">Search Family Members</a></div>
+            </section>
         </div>
     );
 };

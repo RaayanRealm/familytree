@@ -1,25 +1,22 @@
 .header {
     background-color: #01a982;
+    /* ✅ Matches your theme */
     padding: 15px;
-    text-align: center;
-    color: #ffffff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
 }
 
-.header h1 {
-    margin: 0;
+.logo-title h1 {
     font-size: 28px;
+    margin: 0;
 }
 
 nav ul {
     list-style: none;
-    padding: 0;
     display: flex;
-    justify-content: center;
     gap: 20px;
-}
-
-nav ul li {
-    position: relative;
 }
 
 nav ul li a,
@@ -30,7 +27,7 @@ nav ul li span {
     cursor: pointer;
 }
 
-nav ul .dropdown-menu {
+.dropdown-menu {
     display: none;
     position: absolute;
     background-color: #01a982;
