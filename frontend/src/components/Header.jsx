@@ -22,19 +22,17 @@ const Header = () => {
                 <ul>
                     <li><Link to="/">Home</Link></li>
                     <li className="dropdown">
-                        <span>Family Tree Heads ▼</span>
-                        <ul className="dropdown-menu">
-                            <li><Link to="/family/paternal">Paternal</Link></li>
-                            <li><Link to="/family/maternal">Maternal</Link></li>
-                        </ul>
-                    </li>
-                    <li className="dropdown">
                         <span>Help ▼</span>
                         <ul className="dropdown-menu">
                             <li><Link to="/help/faq">FAQ</Link></li>
                             <li><Link to="/help/contact">Contact Us</Link></li>
                             <li><Link to="/help/about">About Family Tree</Link></li>
                         </ul>
+                    </li>
+                    <li>
+                        <Link to="/add-member" className="add-member-header-btn">
+                            Add
+                        </Link>
                     </li>
                     <Search members={members} />
                 </ul>

@@ -15,7 +15,7 @@ export const getFamilyMember = async (id) => {
 export const getMemberRelations = async (id) => {
   const response = await axios.get(`${API_URL}/relationships/${id}`);
   return response.data.map(relation => ({
-    id: relation.id,  // ✅ Ensure the ID is passed
+    id: relation.id,
     name: `${relation.first_name} ${relation.last_name}`,
     type: relation.relationship_type,
   }));
@@ -27,8 +27,35 @@ export const getRelationships = async () => {
 };
 
 export const addFamilyMember = async (data) => {
-  const response = await axios.post(`${API_URL}/members`, data);
-  return response.data;
+  // If data.profile_picture is a base64 string, upload as multipart/form-data
+  if (data.profile_picture && data.profile_picture.startsWith("data:")) {
+    const formData = new FormData();
+    // Convert base64 to Blob
+    const arr = data.profile_picture.split(",");
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    const ext = mime.split("/")[1] || "png";
+    const filename = `profile_${Date.now()}.${ext}`;
+    const file = new File([u8arr], filename, { type: mime });
+
+    formData.append("profile_picture_file", file);
+    // Remove profile_picture from data, will be set by backend
+    const { profile_picture, ...rest } = data;
+    formData.append("personData", JSON.stringify(rest));
+    const response = await axios.post(`${API_URL}/members`, formData, {
+      headers: { "Content-Type": "multipart/form-data" }
+    });
+    return response.data;
+  } else {
+    // Send as JSON (no file upload)
+    const response = await axios.post(`${API_URL}/members`, data);
+    return response.data;
+  }
 };
 
 export const deleteFamilyMember = async (id) => {
@@ -39,4 +66,24 @@ export const deleteFamilyMember = async (id) => {
 export const getRecentMembers = async () => {
   const response = await axios.get(`${API_URL}/members/recent`);
   return response.data.slice(0, 5); // Return only the last 5 members
-}
+};
+
+export const getFamilyEvents = async () => {
+  const response = await axios.get(`${API_URL}/events`);
+  return response.data;
+};
+
+export const getHelpFAQ = async () => {
+  const response = await axios.get(`${API_URL}/help/faq`);
+  return response.data;
+};
+
+export const getHelpAbout = async () => {
+  const response = await axios.get(`${API_URL}/help/about`);
+  return response.data.about;
+};
+
+export const getHelpContact = async () => {
+  const response = await axios.get(`${API_URL}/help/contact`);
+  return response.data.contact;
+};

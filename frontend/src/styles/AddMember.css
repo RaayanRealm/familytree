@@ -1,0 +1,312 @@
+/* Ensure all AddMember page styles are here and not inline in JSX */
+
+/* Container and headings */
+.add-member-container {
+    max-width: 520px;
+    margin: 2.5rem auto;
+    background: #f8fafc;
+    border-radius: 14px;
+    box-shadow: 0 4px 24px rgba(1, 169, 130, 0.10);
+    padding: 2rem 2.2rem 1.5rem 2.2rem;
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+}
+
+.add-member-container h2 {
+    color: #01a982;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    letter-spacing: 0.5px;
+}
+
+/* Form rows */
+.add-member-form .form-row {
+    margin-bottom: 1.1rem;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.form-row-checkbox,
+.align-death-checkbox {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0;
+    margin-bottom: 1.1rem;
+}
+
+.death-label {
+    font-weight: 600;
+    color: #01896d;
+    margin-bottom: 0;
+    font-size: 1rem;
+    margin-left: 0;
+    cursor: pointer;
+    flex: 1;
+    /* ensures label takes available space */
+}
+
+.death-checkbox {
+    width: 22px;
+    height: 22px;
+    accent-color: #01a982;
+    margin: 0 0 0 1rem;
+    cursor: pointer;
+}
+
+/* Inputs, selects, textarea */
+.add-member-form label {
+    font-weight: 600;
+    color: #01896d;
+    margin-bottom: 0.3rem;
+}
+
+.add-member-form input,
+.add-member-form select,
+.add-member-form textarea,
+.date-picker-input {
+    padding: 0.6rem 0.8rem;
+    border: 1.5px solid #b2f5ea;
+    border-radius: 7px;
+    font-size: 1rem;
+    background: #fff;
+    color: #222222;
+    transition: border 0.2s;
+    width: 100%;
+}
+
+.add-member-form input:focus,
+.add-member-form select:focus,
+.add-member-form textarea:focus,
+.relation-member-input:focus {
+    border: 1.5px solid #01a982;
+    outline: none;
+}
+
+.add-member-form select,
+.relation-type-select {
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    border: 1.5px solid #b2f5ea;
+    border-radius: 7px;
+    font-size: 1rem;
+    background: #fff;
+    color: #078f6f !important;
+    transition: border 0.2s;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+
+.add-member-form select:focus,
+.relation-type-select:focus {
+    border: 1.5px solid #01a982;
+    outline: none;
+    color: #01896d !important;
+}
+
+.add-member-form textarea {
+    resize: vertical;
+}
+
+/* Profile picture file input */
+.profile-file-input {
+    padding: 0.4rem 0.8rem;
+    border: 1.5px solid #b2f5ea;
+    border-radius: 7px;
+    font-size: 1rem;
+    background: #fff;
+    color: #222;
+    width: 100%;
+    margin-bottom: 0.3rem;
+    cursor: pointer;
+}
+
+.profile-file-input::-webkit-file-upload-button {
+    background: linear-gradient(90deg, #01a982 0%, #06b6d4 100%);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 0.5rem 1.2rem;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.profile-file-input::file-selector-button {
+    background: linear-gradient(90deg, #01a982 0%, #06b6d4 100%);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 0.5rem 1.2rem;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.profile-file-input::-webkit-file-upload-button:hover,
+.profile-file-input::file-selector-button:hover {
+    background: linear-gradient(90deg, #01896d 0%, #06b6d4 100%);
+}
+
+/* Relations */
+.relation-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.relation-member-input {
+    padding: 0.6rem 0.8rem;
+    border: 1.5px solid #b2f5ea;
+    border-radius: 7px;
+    font-size: 1rem;
+    background: #fff;
+    color: #222;
+    width: 100%;
+    transition: border 0.2s;
+}
+
+.relation-type-select {
+    width: 120px;
+    min-width: 90px;
+    max-width: 160px;
+    margin-left: 0.5rem;
+    padding: 0.5rem 0.7rem;
+    border: 1.5px solid #b2f5ea;
+    border-radius: 7px;
+    font-size: 0.98rem;
+    background: #fff;
+    color: #222;
+    transition: border 0.2s;
+}
+
+.relation-type-select:focus {
+    border: 1.5px solid #01a982;
+    outline: none;
+}
+
+/* react-select styles */
+.relation-async-select__control {
+    border: 1.5px solid #b2f5ea !important;
+    border-radius: 7px !important;
+    min-height: 44px;
+    font-size: 1.08rem;
+    background: #fff !important;
+    color: #222 !important;
+    box-shadow: none !important;
+    width: 320px !important;
+    max-width: 100%;
+}
+
+.relation-async-select__control--is-focused {
+    border: 1.5px solid #01a982 !important;
+}
+
+.relation-async-select__option--is-focused {
+    background: #e0f7f4 !important;
+    color: #01896d !important;
+}
+
+.relation-async-select__option--is-selected {
+    background: #01a982 !important;
+    color: #fff !important;
+}
+
+.relation-async-select__menu {
+    z-index: 9999 !important;
+}
+
+/* Add/Remove buttons */
+.relation-add-btn,
+.relation-remove-btn {
+    background: #01a982;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 0.4rem 0.9rem;
+    font-size: 0.98rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.relation-add-btn {
+    margin-top: 0.5rem;
+    background: linear-gradient(90deg, #01a982 0%, #06b6d4 100%);
+}
+
+.relation-add-btn:hover,
+.relation-remove-btn:hover {
+    background: #01896d;
+}
+
+.relation-remove-btn {
+    background: #e11d48;
+    margin-left: 0.5rem;
+}
+
+.relation-remove-btn:hover {
+    background: #be123c;
+}
+
+/* Error and submit */
+.form-error {
+    color: #b91c1c;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    padding: 0.5rem 0.8rem;
+    margin-bottom: 1rem;
+    font-size: 0.98rem;
+}
+
+.submit-btn {
+    background: linear-gradient(90deg, #01a982 0%, #06b6d4 100%);
+    color: #fff;
+    border: none;
+    border-radius: 7px;
+    padding: 1rem 0;
+    font-size: 1.18rem;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 1.5rem;
+    transition: background 0.2s;
+    width: 100%;
+    display: block;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 12px rgba(1, 169, 130, 0.08);
+}
+
+.submit-btn:hover {
+    background: linear-gradient(90deg, #01896d 0%, #06b6d4 100%);
+}
+
+/* Profile picture preview */
+.profile-or-text {
+    margin: 0.5rem 0;
+    text-align: center;
+    color: #888;
+    font-size: 0.98rem;
+    font-style: italic;
+}
+
+.profile-picture-preview {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    margin-top: 8px;
+    object-fit: cover;
+    display: block;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .add-member-container {
+        padding: 1rem;
+    }
+}

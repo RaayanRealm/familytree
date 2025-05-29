@@ -17,6 +17,9 @@ nav ul {
     list-style: none;
     display: flex;
     gap: 20px;
+    align-items: center;
+    margin: 0;
+    padding: 0;
 }
 
 nav ul li a,
@@ -37,4 +40,26 @@ nav ul li span {
 
 .dropdown:hover .dropdown-menu {
     display: block;
+}
+
+.add-member-header-btn {
+    background: linear-gradient(90deg, #01a982 0%, #06b6d4 100%);
+    color: #fff;
+    border: none;
+    border-radius: 7px;
+    font-weight: 600;
+    font-size: 1rem;
+    padding: 0.4rem 1.1rem;
+    margin: 0 0.5rem 0 0;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s;
+    display: inline-block;
+    height: 38px;
+    line-height: 1.2;
+    vertical-align: middle;
+}
+
+.add-member-header-btn:hover {
+    background: linear-gradient(90deg, #01896d 0%, #06b6d4 100%);
 }

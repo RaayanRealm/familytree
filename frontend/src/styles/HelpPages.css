@@ -1,0 +1,48 @@
+.help-container {
+    max-width: 600px;
+    margin: 2.5rem auto;
+    background: #f8fafc;
+    border-radius: 14px;
+    box-shadow: 0 4px 24px rgba(1, 169, 130, 0.10);
+    padding: 2rem 2.2rem 1.5rem 2.2rem;
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+}
+
+.help-title {
+    color: #01a982;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    letter-spacing: 0.5px;
+}
+
+.help-content {
+    font-size: 1.08rem;
+    color: #222;
+    line-height: 1.7;
+    margin-bottom: 1rem;
+}
+
+.faq-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.faq-item {
+    margin-bottom: 1.2rem;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(1, 169, 130, 0.07);
+    padding: 1rem 1.2rem;
+}
+
+.faq-question {
+    font-weight: 600;
+    color: #01896d;
+    margin-bottom: 0.3rem;
+}
+
+.faq-answer {
+    color: #444;
+    margin-left: 0.5rem;
+}

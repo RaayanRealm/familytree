@@ -4,8 +4,7 @@ exports.up = function (knex) {
     table.integer("person_id").references("id").inTable("persons").onDelete("CASCADE");
     table.integer("relative_id").references("id").inTable("persons").onDelete("CASCADE");
     table.string("relationship_type").checkIn([
-      "Parent", "Child", "Sibling", "Spouse", "Grandparent",
-      "Grandchild", "Cousin", "Uncle", "Aunt", "Nephew", "Niece"
+      "Parent", "Child", "Sibling", "Spouse", "Grandparent", "Grandchild"
     ]);
     table.text("additional_info");
     table.unique(["person_id", "relative_id", "relationship_type"]);
