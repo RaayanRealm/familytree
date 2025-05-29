@@ -15,11 +15,11 @@ The **Family Tree Website** helps families organize and visualize their lineage.
 ## ⚙️ Technology Stack
 | Component     | Technology Options |
 |--------------|-------------------|
-| Front-End    | React.js / Vue.js |
-| Back-End     | Node.js / Django  |
-| Database     | MySQL / PostgreSQL / MongoDB |
-| Tree Visualization | D3.js / Treant.js |
-| Hosting      | AWS / Firebase / Heroku |
+| Front-End    | React.js |
+| Back-End     | Node.js / Express.js  |
+| Database     | PostgreSQL |
+| Tree Visualization | D3.js / Treant.js (TBD)|
+| Hosting      | AWS / Firebase / Heroku (TBD)|
 
 ## 🔨 Setup Instructions
 ### **1️⃣ Clone the Repository**
