@@ -31,6 +31,9 @@ cd familytree
 - nodemon index.js
 - npm run dev
 
+## How website looks
+![Screenshot of Family Tree Website](assets/familytree.png)
+
 ## ✨ Contributions
 Feel free to open issues or pull requests to enhance the project.
 ## 📜 License
