@@ -58,6 +58,36 @@ export const addFamilyMember = async (data) => {
   }
 };
 
+export const updateFamilyMember = async (id, data) => {
+  // If data.profile_picture is a base64 string, upload as multipart/form-data
+  if (data.profile_picture && data.profile_picture.startsWith("data:")) {
+    const formData = new FormData();
+    const arr = data.profile_picture.split(",");
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    const ext = mime.split("/")[1] || "png";
+    const filename = `profile_${Date.now()}.${ext}`;
+    const file = new File([u8arr], filename, { type: mime });
+
+    formData.append("profile_picture_file", file);
+    const { profile_picture, ...rest } = data;
+    formData.append("personData", JSON.stringify(rest));
+    const response = await axios.put(`${API_URL}/members/${id}`, formData, {
+      headers: { "Content-Type": "multipart/form-data" }
+    });
+    return response.data;
+  } else {
+    // Send as JSON (no file upload)
+    const response = await axios.put(`${API_URL}/members/${id}`, data);
+    return response.data;
+  }
+};
+
 export const deleteFamilyMember = async (id) => {
   const response = await axios.delete(`${API_URL}/members/${id}`);
   return response.data;
@@ -90,5 +120,15 @@ export const getHelpContact = async () => {
 
 export const getFamilyTree = async (personId) => {
   const response = await axios.get(`${API_URL}/tree/${personId}`);
+  return response.data;
+};
+
+export const addMarriage = async ({ person_id, spouse_id, marriage_date, divorce_date }) => {
+  const response = await axios.post(`${API_URL}/marriages`, {
+    person_id,
+    spouse_id,
+    marriage_date,
+    divorce_date,
+  });
   return response.data;
 };

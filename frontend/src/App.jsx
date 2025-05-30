@@ -9,6 +9,8 @@ import HelpFAQ from "./pages/HelpFAQ";
 import HelpAbout from "./pages/HelpAbout";
 import HelpContact from "./pages/HelpContact";
 import FamilyTree from "./pages/FamilyTree";
+import AddMarriage from "./pages/AddMarriage";
+import EditMember from "./pages/EditMember";
 
 function App() {
   return (
@@ -18,6 +20,7 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/member/:id" element={<MemberProfile />} />
         <Route path="/add-member" element={<AddMember />} />
+        <Route path="/add-marriage" element={<AddMarriage />} />
         <Route path="/events" element={<Events />} />
         <Route path="/family/tree" element={<FamilyTree />} />
         {/*<Route path="/family/maternal" element={<MaternalTree />} />
@@ -25,6 +28,7 @@ function App() {
         <Route path="/help/faq" element={<HelpFAQ />} />
         <Route path="/help/about" element={<HelpAbout />} />
         <Route path="/help/contact" element={<HelpContact />} />
+        <Route path="/edit-member/:id" element={<EditMember />} />
       </Routes>
     </Router>
   );

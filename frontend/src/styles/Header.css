@@ -43,7 +43,7 @@ nav ul li span {
 }
 
 .add-member-header-btn {
-    background: linear-gradient(90deg, #01a982 0%, #06b6d4 100%);
+    background: #01a982;
     color: #fff;
     border: none;
     border-radius: 7px;
@@ -61,5 +61,5 @@ nav ul li span {
 }
 
 .add-member-header-btn:hover {
-    background: linear-gradient(90deg, #01896d 0%, #06b6d4 100%);
+    background: #01896d;
 }

@@ -75,6 +75,15 @@ const MemberProfile = () => {
           </p>
           <p><span className="profile-label">Place of Birth:</span> <span className="profile-value">{member.place_of_birth}</span></p>
           <p><span className="profile-label">Current Location:</span> <span className="profile-value">{member.current_location}</span></p>
+          {/* Marriage Anniversary */}
+          {member.marriages && member.marriages.length > 0 && member.marriages[0].marriage_date && (
+            <p>
+              <span className="profile-label">Marriage :</span>{" "}
+              <span className="profile-value">{formatDate(member.marriages[0].marriage_date)} {member.marriages[0].marriage_date && (
+                <> ({yearsPassed(member.marriages[0].marriage_date)} years ago)</>
+              )}</span>
+            </p>
+          )}
         </div>
       </div>
 
