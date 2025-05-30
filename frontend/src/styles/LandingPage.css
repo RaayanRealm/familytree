@@ -81,10 +81,14 @@
     max-width: 250px;
     margin-top: 5px;
     transition: opacity 0.3s ease-in-out;
-}
-
-.carousel-info .bio:hover {
-    opacity: 0.8;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: normal;
+    min-height: 2.8em;
+    /* keeps height consistent for 2 lines */
 }
 
 

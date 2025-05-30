@@ -1,0 +1,51 @@
+.family-tree-container {
+    max-width: 1000px;
+    margin: 2.5rem auto;
+    background: #f8fafc;
+    border-radius: 14px;
+    box-shadow: 0 4px 24px rgba(1, 169, 130, 0.10);
+    padding: 2rem 2.2rem 1.5rem 2.2rem;
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+}
+
+.tree-search-bar {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    align-items: center;
+}
+
+.tree-search-bar input {
+    padding: 0.6rem 0.8rem;
+    border: 1.5px solid #b2f5ea;
+    border-radius: 7px;
+    font-size: 1rem;
+    width: 220px;
+}
+
+.tree-search-bar button {
+    background: linear-gradient(90deg, #01a982 0%, #06b6d4 100%);
+    color: #fff;
+    border: none;
+    border-radius: 7px;
+    padding: 0.7rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.tree-search-bar button:disabled {
+    background: #b2f5ea;
+    color: #888;
+    cursor: not-allowed;
+}
+
+.tree-visualization {
+    min-height: 600px;
+    background: #fff;
+    border-radius: 10px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(1, 169, 130, 0.07);
+    overflow: auto;
+}

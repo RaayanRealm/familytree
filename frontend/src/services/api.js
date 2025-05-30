@@ -87,3 +87,8 @@ export const getHelpContact = async () => {
   const response = await axios.get(`${API_URL}/help/contact`);
   return response.data.contact;
 };
+
+export const getFamilyTree = async (personId) => {
+  const response = await axios.get(`${API_URL}/tree/${personId}`);
+  return response.data;
+};

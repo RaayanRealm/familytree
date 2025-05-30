@@ -130,7 +130,36 @@ router.post("/members", (req, res, next) => {
       const trx = await db.transaction();
       try {
         const personDataObj = JSON.parse(req.body.personData);
-        const { deaths, relationships, death, first_name, last_name, ...personData } = personDataObj;
+        let { deaths, relationships, death, first_name, last_name, ...personData } = personDataObj;
+
+        // --- Add missing parent spouses as parents ---
+        if (Array.isArray(relationships)) {
+          // Find all parent IDs from relationships
+          const parentIds = relationships
+            .filter(r => r.relationship_type === "Parent")
+            .map(r => r.relative_id);
+
+          // For each parent, find their spouses and add as parent if not already present
+          for (const parentId of parentIds) {
+            const spouseRows = await db("relationships")
+              .where({ person_id: parentId, relationship_type: "Spouse" })
+              .select("relative_id");
+            for (const spouse of spouseRows) {
+              // Only add if not already present as parent
+              if (
+                !relationships.some(
+                  r => r.relationship_type === "Parent" && r.relative_id === spouse.relative_id
+                )
+              ) {
+                relationships.push({
+                  relative_id: spouse.relative_id,
+                  relationship_type: "Parent"
+                });
+              }
+            }
+          }
+        }
+        // --- End add missing parent spouses ---
 
         // Insert person first to get the personId
         const [person] = await trx("persons").insert({
@@ -249,6 +278,8 @@ router.post("/members", (req, res, next) => {
           }
         }
         await trx.commit();
+        // Invalidate tree cache for this person and ancestors
+        await invalidateFamilyTreeCache(personId, db);
         res.json({ message: "Family member added successfully!", id: personId });
       } catch (error) {
         await trx.rollback();
@@ -259,7 +290,35 @@ router.post("/members", (req, res, next) => {
     (async () => {
       const trx = await db.transaction();
       try {
-        const { deaths, relationships, death, ...personData } = req.body;
+        let { deaths, relationships, death, ...personData } = req.body;
+
+        // --- Add missing parent spouses as parents ---
+        if (Array.isArray(relationships)) {
+          const parentIds = relationships
+            .filter(r => r.relationship_type === "Parent")
+            .map(r => r.relative_id);
+
+          for (const parentId of parentIds) {
+            const spouseRows = await db("relationships")
+              .where({ person_id: parentId, relationship_type: "Spouse" })
+              .select("relative_id");
+            for (const spouse of spouseRows) {
+              if (
+                !relationships.some(
+                  r => r.relationship_type === "Parent" && r.relative_id === spouse.relative_id
+                )
+              ) {
+                relationships.push({
+                  relative_id: spouse.relative_id,
+                  relationship_type: "Parent"
+                });
+              }
+            }
+          }
+        }
+        // --- End add missing parent spouses ---
+
+        // Insert person first to get the personId
         const [person] = await trx("persons").insert(personData).returning("*");
         const personId = person.id || person;
 
@@ -347,6 +406,8 @@ router.post("/members", (req, res, next) => {
           }
         }
         await trx.commit();
+        // Invalidate tree cache for this person and ancestors
+        await invalidateFamilyTreeCache(personId, db);
         res.json({ message: "Family member added successfully!", id: personId });
       } catch (error) {
         await trx.rollback();
@@ -359,7 +420,9 @@ router.post("/members", (req, res, next) => {
 // Delete a family member
 router.delete("/members/:id", async (req, res) => {
   try {
-    await db("persons").where({ id: req.params.id }).del();
+    const personId = parseInt(req.params.id, 10);
+    await db("persons").where({ id: personId }).del();
+    await invalidateFamilyTreeCache(personId, db);
     res.json({ message: "Family member deleted successfully!" });
   } catch (error) {
     res.status(500).json({ error: "Error deleting family member" });
@@ -403,6 +466,128 @@ router.get("/help/contact", (req, res) => {
   res.json({
     contact: "For support, email us at support@familytree.com or call +1-800-FAMILY."
   });
+});
+
+// In-memory cache for family trees
+const familyTreeCache = {};
+
+// Helper to invalidate cache for a person and their ancestors
+async function invalidateFamilyTreeCache(personId, db) {
+  // Remove this person's tree from cache
+  delete familyTreeCache[personId];
+  // Invalidate all ancestors' trees (parents, recursively)
+  const parentRels = await db("relationships")
+    .where({ relative_id: personId, relationship_type: "Child" });
+  for (const rel of parentRels) {
+    await invalidateFamilyTreeCache(rel.person_id, db);
+  }
+}
+
+// Recursive function to build descendants tree for a person
+async function buildFamilyTree(personId, db) {
+  // Check cache first
+  if (familyTreeCache[personId]) {
+    return familyTreeCache[personId];
+  }
+
+  const person = await db("persons").where({ id: personId }).first();
+  if (!person) return null;
+
+  // Get spouse(s)
+  const spouses = await db("relationships")
+    .where({ person_id: personId, relationship_type: "Spouse" })
+    .join("persons", "relationships.relative_id", "persons.id")
+    .select("persons.id", "persons.first_name", "persons.last_name", "persons.profile_picture");
+
+  // Get children
+  const childrenRels = await db("relationships")
+    .where({ person_id: personId, relationship_type: "Child" });
+
+  const children = [];
+  for (const rel of childrenRels) {
+    const childTree = await buildFamilyTree(rel.relative_id, db);
+    if (childTree) children.push(childTree);
+  }
+
+  // Prepare node for react-d3-tree
+  const node = {
+    name: `${person.first_name} ${person.last_name}`,
+    attributes: {
+      id: person.id,
+      profile_picture: person.profile_picture || null,
+      spouses: spouses.map(s => ({
+        id: s.id,
+        name: `${s.first_name} ${s.last_name}`,
+        profile_picture: s.profile_picture || null
+      }))
+    }
+  };
+
+  if (children.length > 0) {
+    node.children = children;
+  }
+
+  // Cache the result
+  familyTreeCache[personId] = node;
+  return node;
+}
+
+// Endpoint to get family tree for a person
+router.get("/tree/:id", async (req, res) => {
+  const personId = parseInt(req.params.id, 10);
+  if (isNaN(personId)) return res.status(400).json({ error: "Invalid ID" });
+
+  try {
+    const tree = await buildFamilyTree(personId, db);
+    res.json(tree);
+  } catch (error) {
+    res.status(500).json({ error: "Error building family tree" });
+  }
+});
+
+// Invalidate cache after add/delete member or relationship
+// Example for add member:
+router.post("/members", (req, res, next) => {
+  // ...existing code...
+  if (req.headers["content-type"] && req.headers["content-type"].includes("multipart/form-data")) {
+    upload.single("profile_picture_file")(req, res, async function (err) {
+      // ...existing code...
+      try {
+        // ...existing code...
+        await trx.commit();
+        // Invalidate tree cache for this person and ancestors
+        await invalidateFamilyTreeCache(personId, db);
+        res.json({ message: "Family member added successfully!", id: personId });
+      } catch (error) {
+        // ...existing code...
+      }
+    });
+  } else {
+    (async () => {
+      // ...existing code...
+      try {
+        // ...existing code...
+        await trx.commit();
+        // Invalidate tree cache for this person and ancestors
+        await invalidateFamilyTreeCache(personId, db);
+        res.json({ message: "Family member added successfully!", id: personId });
+      } catch (error) {
+        // ...existing code...
+      }
+    })();
+  }
+});
+
+// Example for delete member:
+router.delete("/members/:id", async (req, res) => {
+  try {
+    const personId = parseInt(req.params.id, 10);
+    await db("persons").where({ id: personId }).del();
+    await invalidateFamilyTreeCache(personId, db);
+    res.json({ message: "Family member deleted successfully!" });
+  } catch (error) {
+    res.status(500).json({ error: "Error deleting family member" });
+  }
 });
 
 module.exports = router;
