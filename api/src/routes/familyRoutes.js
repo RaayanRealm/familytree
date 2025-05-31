@@ -7,14 +7,7 @@ const path = require("path");
 const axios = require("axios");
 const cloudinary = require('cloudinary').v2;
 const isDev = process.env.DEV === "true";
-
-if (!isDev) {
-  cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-  });
-}
+log("ENV DEV:", process.env.DEV, "isDev:", isDev, "NODE_ENV:", process.env.NODE_ENV, "Vercel:", !!process.env.VERCEL);
 
 // Set up multer for image uploads (move this to the top, outside the route)
 const storage = multer.diskStorage({
@@ -32,7 +25,11 @@ const storage = multer.diskStorage({
 const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } }); // <-- this is the multer instance
 
 // Add this at the top for consistent logging
-const log = (...args) => console.log("[familyRoutes]", ...args);
+const log = (...args) => {
+  // Print to Vercel logs (stdout)
+  console.log("[familyRoutes]", ...args);
+  // Optionally, send to Cloudinary if needed (not required for debugging)
+};
 log("Family routes initialized with devmode:", isDev);
 // Get all family members with related info
 router.get("/members", async (req, res) => {
@@ -157,6 +154,7 @@ async function downloadImageToFile(url, destPath) {
 
 // Helper to upload image buffer/file to Cloudinary and get URL
 async function uploadToCloudinary(filePath, publicId) {
+  log("Uploading file to Cloudinary:", filePath, publicId);
   return cloudinary.uploader.upload(filePath, {
     public_id: publicId,
     folder: "familytree",
@@ -167,6 +165,7 @@ async function uploadToCloudinary(filePath, publicId) {
 
 // Helper to upload image from URL to Cloudinary
 async function uploadUrlToCloudinary(imageUrl, publicId) {
+  log("Uploading image URL to Cloudinary:", imageUrl, publicId);
   return cloudinary.uploader.upload(imageUrl, {
     public_id: publicId,
     folder: "familytree",
@@ -177,10 +176,11 @@ async function uploadUrlToCloudinary(imageUrl, publicId) {
 
 // Add a new family member (with relationships and deaths, and image upload)
 router.post("/members", (req, res, next) => {
-  log("POST /members called");
+  log("POST /members called, isDev:", isDev, "content-type:", req.headers["content-type"]);
   if (req.headers["content-type"] && req.headers["content-type"].includes("multipart/form-data")) {
     log("Handling multipart/form-data for member creation");
     upload.single("profile_picture_file")(req, res, async function (err) {
+      log("POST /members multer upload, isDev:", isDev, "req.file:", !!req.file);
       if (err) {
         log("Image upload failed:", err.message);
         return res.status(400).json({ error: "Image upload failed: " + err.message });
@@ -231,6 +231,7 @@ router.post("/members", (req, res, next) => {
 
         // Handle profile picture file or URL
         if (isDev) {
+          log("DEV MODE: using local file storage for images");
           // Local storage as before
           if (req.file) {
             const ext = path.extname(req.file.originalname);
@@ -263,17 +264,16 @@ router.post("/members", (req, res, next) => {
             }
           }
         } else {
-          // Cloudinary logic
-          let cloudinaryUrl = null;
+          log("PROD MODE: using Cloudinary for images");
+          // Always use Cloudinary in production, never write to local disk
           if (req.file) {
             const safeFirst = String(first_name).replace(/[^a-zA-Z0-9]/g, "");
             const safeLast = String(last_name).replace(/[^a-zA-Z0-9]/g, "");
             const publicId = `${safeFirst}_${safeLast}_${personId}`;
             try {
               const result = await uploadToCloudinary(req.file.path, publicId);
-              cloudinaryUrl = result.secure_url;
               await trx("persons").where({ id: personId }).update({
-                profile_picture: cloudinaryUrl
+                profile_picture: result.secure_url
               });
               fs.unlinkSync(req.file.path);
             } catch (err) {
@@ -284,10 +284,10 @@ router.post("/members", (req, res, next) => {
             const safeLast = String(last_name).replace(/[^a-zA-Z0-9]/g, "");
             const publicId = `${safeFirst}_${safeLast}_${personId}`;
             try {
+              log("Uploading image URL to Cloudinary (no local save):", profile_picture, publicId);
               const result = await uploadUrlToCloudinary(profile_picture, publicId);
-              cloudinaryUrl = result.secure_url;
               await trx("persons").where({ id: personId }).update({
-                profile_picture: cloudinaryUrl
+                profile_picture: result.secure_url
               });
             } catch (err) {
               log("Cloudinary upload from URL failed:", err.message);
@@ -713,7 +713,7 @@ router.post("/marriages", async (req, res) => {
 
 // Update an existing family member (with relationships and deaths, and image upload)
 router.put("/members/:id", (req, res, next) => {
-  log("PUT /members/:id called with id:", req.params.id);
+  log("PUT /members/:id called, isDev:", isDev, "content-type:", req.headers["content-type"]);
   const personId = parseInt(req.params.id, 10);
   if (isNaN(personId)) {
     return res.status(400).json({ error: "Invalid member ID" });
@@ -722,6 +722,7 @@ router.put("/members/:id", (req, res, next) => {
   if (req.headers["content-type"] && req.headers["content-type"].includes("multipart/form-data")) {
     log("Handling multipart/form-data for member update");
     upload.single("profile_picture_file")(req, res, async function (err) {
+      log("PUT /members/:id multer upload, isDev:", isDev, "req.file:", !!req.file);
       if (err) {
         return res.status(400).json({ error: "Image upload failed: " + err.message });
       }
@@ -768,6 +769,8 @@ router.put("/members/:id", (req, res, next) => {
 
         // Handle profile picture file or URL
         if (isDev) {
+          log("DEV MODE: using local file storage for images");
+          // Local storage as before
           if (req.file) {
             const ext = path.extname(req.file.originalname);
             const safeFirst = String(first_name).replace(/[^a-zA-Z0-9]/g, "");
@@ -781,6 +784,7 @@ router.put("/members/:id", (req, res, next) => {
               profile_picture: `/images/${newFileName}`
             });
           } else if (profile_picture && typeof profile_picture === "string" && profile_picture.startsWith("http")) {
+            // Download and save locally as before
             const safeFirst = String(first_name).replace(/[^a-zA-Z0-9]/g, "");
             const safeLast = String(last_name).replace(/[^a-zA-Z0-9]/g, "");
             const personName = `${safeFirst}_${safeLast}`.replace(/_+$/, "");
@@ -798,33 +802,36 @@ router.put("/members/:id", (req, res, next) => {
             }
           }
         } else {
-          let cloudinaryUrl = null;
+          log("PROD MODE: using Cloudinary for images");
+          // Always use Cloudinary in production, never write to local disk
           if (req.file) {
             const safeFirst = String(first_name).replace(/[^a-zA-Z0-9]/g, "");
             const safeLast = String(last_name).replace(/[^a-zA-Z0-9]/g, "");
             const publicId = `${safeFirst}_${safeLast}_${personId}`;
             try {
+              log("Uploading file to Cloudinary (no local save):", req.file.path, publicId);
               const result = await uploadToCloudinary(req.file.path, publicId);
-              cloudinaryUrl = result.secure_url;
               await trx("persons").where({ id: personId }).update({
-                profile_picture: cloudinaryUrl
+                profile_picture: result.secure_url
               });
               fs.unlinkSync(req.file.path);
             } catch (err) {
               log("Cloudinary upload failed:", err.message);
+              return res.status(500).json({ error: "Cloudinary upload failed: " + err.message });
             }
           } else if (profile_picture && typeof profile_picture === "string" && profile_picture.startsWith("http")) {
             const safeFirst = String(first_name).replace(/[^a-zA-Z0-9]/g, "");
             const safeLast = String(last_name).replace(/[^a-zA-Z0-9]/g, "");
             const publicId = `${safeFirst}_${safeLast}_${personId}`;
             try {
+              log("Uploading image URL to Cloudinary (no local save):", profile_picture, publicId);
               const result = await uploadUrlToCloudinary(profile_picture, publicId);
-              cloudinaryUrl = result.secure_url;
               await trx("persons").where({ id: personId }).update({
-                profile_picture: cloudinaryUrl
+                profile_picture: result.secure_url
               });
             } catch (err) {
               log("Cloudinary upload from URL failed:", err.message);
+              return res.status(500).json({ error: "Cloudinary upload from URL failed: " + err.message });
             }
           }
         }
@@ -916,21 +923,38 @@ router.put("/members/:id", (req, res, next) => {
 
         // Handle profile picture from URL (for JSON body)
         if (profile_picture && typeof profile_picture === "string" && profile_picture.startsWith("http")) {
-          log("Downloading profile picture from URL for person:", personId, profile_picture);
-          const safeFirst = String(personData.first_name).replace(/[^a-zA-Z0-9]/g, "");
-          const safeLast = String(personData.last_name).replace(/[^a-zA-Z0-9]/g, "");
-          const personName = `${safeFirst}_${safeLast}`.replace(/_+$/, "");
-          const newFileName = `${personName}_${personId}.jpeg`;
-          const imagesDir = path.join(__dirname, "../../public/images");
-          const newFilePath = path.join(imagesDir, newFileName);
-          if (fs.existsSync(newFilePath)) fs.unlinkSync(newFilePath);
-          try {
-            await downloadImageToFile(profile_picture, newFilePath);
-            await trx("persons").where({ id: personId }).update({
-              profile_picture: `/images/${newFileName}`
-            });
-          } catch (err) {
-            log("Failed to download image from URL:", err.message);
+          if (isDev) {
+            log("DEV MODE: using local file storage for images");
+            // Local storage as before
+            const safeFirst = String(personData.first_name).replace(/[^a-zA-Z0-9]/g, "");
+            const safeLast = String(personData.last_name).replace(/[^a-zA-Z0-9]/g, "");
+            const personName = `${safeFirst}_${safeLast}`.replace(/_+$/, "");
+            const newFileName = `${personName}_${personId}.jpeg`;
+            const imagesDir = path.join(__dirname, "../../public/images");
+            const newFilePath = path.join(imagesDir, newFileName);
+            if (fs.existsSync(newFilePath)) fs.unlinkSync(newFilePath);
+            try {
+              await downloadImageToFile(profile_picture, newFilePath);
+              await trx("persons").where({ id: personId }).update({
+                profile_picture: `/images/${newFileName}`
+              });
+            } catch (err) {
+              log("Failed to download image from URL:", err.message);
+            }
+          } else {
+            const safeFirst = String(personData.first_name).replace(/[^a-zA-Z0-9]/g, "");
+            const safeLast = String(personData.last_name).replace(/[^a-zA-Z0-9]/g, "");
+            const publicId = `${safeFirst}_${safeLast}_${personId}`;
+            try {
+              log("Uploading image URL to Cloudinary (no local save):", profile_picture, publicId);
+              const result = await uploadUrlToCloudinary(profile_picture, publicId);
+              await trx("persons").where({ id: personId }).update({
+                profile_picture: result.secure_url
+              });
+            } catch (err) {
+              log("Cloudinary upload from URL failed:", err.message);
+              return res.status(500).json({ error: "Cloudinary upload from URL failed: " + err.message });
+            }
           }
         }
 
