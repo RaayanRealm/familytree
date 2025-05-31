@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api/family"; // Adjust backend URL if needed
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
+const API_URL = `${API_BASE_URL}/family`; // Adjust backend URL if needed
 
 export const getFamilyMembers = async () => {
   const response = await axios.get(`${API_URL}/members`);
