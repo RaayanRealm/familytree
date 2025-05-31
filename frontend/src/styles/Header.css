@@ -33,13 +33,87 @@ nav ul li span {
 .dropdown-menu {
     display: none;
     position: absolute;
-    background-color: #01a982;
-    padding: 10px;
-    border-radius: 5px;
+    background-color: #f7faf9;
+    /* softer off-white for better contrast */
+    padding: 8px 0;
+    border-radius: 6px;
+    z-index: 1500;
+    box-shadow: 0 2px 10px rgba(1, 169, 130, 0.13);
+    min-width: 180px;
+    max-width: 240px;
+    border: 1px solid #01a982;
 }
 
-.dropdown:hover .dropdown-menu {
+.dropdown:hover .dropdown-menu,
+.dropdown:focus-within .dropdown-menu {
     display: block;
+}
+
+.dropdown-menu li {
+    margin-bottom: 2px;
+    width: 100%;
+}
+
+.dropdown-menu li:last-child {
+    margin-bottom: 0;
+}
+
+.dropdown-menu a.add-member-header-btn {
+    display: block;
+    width: 100%;
+    background: none;
+    color: #01a982;
+    border: none;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 1rem;
+    padding: 0.6rem 1rem;
+    margin: 0;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: left;
+    transition: background 0.18s, color 0.18s;
+    height: auto;
+    line-height: 1.2;
+    vertical-align: middle;
+    box-sizing: border-box;
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.dropdown-menu a.add-member-header-btn:hover,
+.dropdown-menu a.add-member-header-btn:focus {
+    background: #e6f7f3;
+    color: #01896d;
+}
+
+.dropdown-menu a,
+.dropdown-menu span {
+    color: #01a982 !important;
+    background: none !important;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 4px;
+    padding: 0.6rem 1rem;
+    display: block;
+    text-align: left;
+    text-decoration: none;
+    transition: background 0.18s, color 0.18s;
+    box-sizing: border-box;
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.dropdown-menu a:hover,
+.dropdown-menu a:focus,
+.dropdown-menu span:hover,
+.dropdown-menu span:focus {
+    background: #e6f7f3 !important;
+    color: #01896d !important;
 }
 
 .add-member-header-btn {
@@ -62,4 +136,9 @@ nav ul li span {
 
 .add-member-header-btn:hover {
     background: #01896d;
+}
+
+/* Fix for Help dropdown visibility */
+nav ul li.dropdown {
+    position: relative;
 }

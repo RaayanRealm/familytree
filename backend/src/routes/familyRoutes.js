@@ -4,6 +4,7 @@ const db = require("../config/db");
 const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
+const axios = require("axios");
 
 // Set up multer for image uploads (move this to the top, outside the route)
 const storage = multer.diskStorage({
@@ -20,8 +21,12 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } }); // <-- this is the multer instance
 
+// Add this at the top for consistent logging
+const log = (...args) => console.log("[familyRoutes]", ...args);
+
 // Get all family members with related info
 router.get("/members", async (req, res) => {
+  log("GET /members called");
   try {
     const family = await db("persons").select("*");
     // For each person, fetch related deaths and marriages
@@ -65,6 +70,7 @@ router.get("/members/recent", async (req, res) => {
 
 // Get a specific family member by ID (with all related info)
 router.get("/members/:id", async (req, res) => {
+  log("GET /members/:id called with id:", req.params.id);
   try {
     const personId = parseInt(req.params.id, 10);
     if (isNaN(personId)) {
@@ -120,17 +126,40 @@ router.get("/relationships/:id", async (req, res) => {
   }
 });
 
+// Helper to download image from URL and save to disk as .jpeg
+async function downloadImageToFile(url, destPath) {
+  const response = await axios({
+    method: "get",
+    url,
+    responseType: "stream",
+    timeout: 10000,
+    headers: {
+      "User-Agent": "Mozilla/5.0 (compatible; FamilyTreeBot/1.0)"
+    }
+  });
+  return new Promise((resolve, reject) => {
+    const writer = fs.createWriteStream(destPath);
+    response.data.pipe(writer);
+    writer.on("finish", resolve);
+    writer.on("error", reject);
+  });
+}
+
 // Add a new family member (with relationships and deaths, and image upload)
 router.post("/members", (req, res, next) => {
+  log("POST /members called");
   if (req.headers["content-type"] && req.headers["content-type"].includes("multipart/form-data")) {
+    log("Handling multipart/form-data for member creation");
     upload.single("profile_picture_file")(req, res, async function (err) {
       if (err) {
+        log("Image upload failed:", err.message);
         return res.status(400).json({ error: "Image upload failed: " + err.message });
       }
       const trx = await db.transaction();
       try {
         const personDataObj = JSON.parse(req.body.personData);
-        let { deaths, relationships, death, first_name, last_name, ...personData } = personDataObj;
+        log("Parsed personData:", personDataObj);
+        let { deaths, relationships, death, first_name, last_name, profile_picture, ...personData } = personDataObj;
 
         // --- Add missing parent spouses as parents ---
         if (Array.isArray(relationships)) {
@@ -168,8 +197,9 @@ router.post("/members", (req, res, next) => {
           last_name
         }).returning("*");
         const personId = person.id || person;
+        log("Inserted person with id:", personId);
 
-        // Handle profile picture file
+        // Handle profile picture file or URL
         if (req.file) {
           // Build new filename as FirstName_LastName_personId.ext
           const ext = path.extname(req.file.originalname);
@@ -178,19 +208,29 @@ router.post("/members", (req, res, next) => {
           const newFileName = `${safeFirst}_${safeLast}_${personId}${ext}`;
           const imagesDir = path.join(__dirname, "../../public/images");
           const newFilePath = path.join(imagesDir, newFileName);
-
-          // If file exists, delete it
-          if (fs.existsSync(newFilePath)) {
-            fs.unlinkSync(newFilePath);
-          }
-
-          // Move uploaded file to new filename
+          if (fs.existsSync(newFilePath)) fs.unlinkSync(newFilePath);
           fs.renameSync(req.file.path, newFilePath);
-
-          // Update profile_picture path in DB
           await trx("persons").where({ id: personId }).update({
             profile_picture: `/images/${newFileName}`
           });
+        } else if (profile_picture && typeof profile_picture === "string" && profile_picture.startsWith("http")) {
+          log("Downloading profile picture from URL for person:", personId, profile_picture);
+          // Download image from URL and save as .jpeg with /images/<personname_id>.jpeg
+          const safeFirst = String(first_name).replace(/[^a-zA-Z0-9]/g, "");
+          const safeLast = String(last_name).replace(/[^a-zA-Z0-9]/g, "");
+          const personName = `${safeFirst}_${safeLast}`.replace(/_+$/, "");
+          const newFileName = `${personName}_${personId}.jpeg`;
+          const imagesDir = path.join(__dirname, "../../public/images");
+          const newFilePath = path.join(imagesDir, newFileName);
+          if (fs.existsSync(newFilePath)) fs.unlinkSync(newFilePath);
+          try {
+            await downloadImageToFile(profile_picture, newFilePath);
+            await trx("persons").where({ id: personId }).update({
+              profile_picture: `/images/${newFileName}`
+            });
+          } catch (err) {
+            log("Failed to download image from URL:", err.message);
+          }
         }
 
         // Insert deaths if provided
@@ -277,20 +317,23 @@ router.post("/members", (req, res, next) => {
             }
           }
         }
+        log("Committing transaction for person:", personId);
         await trx.commit();
-        // Invalidate tree cache for this person and ancestors
         await invalidateFamilyTreeCache(personId, db);
+        log("Family member added successfully:", personId);
         res.json({ message: "Family member added successfully!", id: personId });
       } catch (error) {
+        log("Error adding family member:", error.message);
         await trx.rollback();
         res.status(500).json({ error: error.message || "Error adding family member" });
       }
     });
   } else {
+    log("Handling JSON body for member creation");
     (async () => {
       const trx = await db.transaction();
       try {
-        let { deaths, relationships, death, ...personData } = req.body;
+        let { deaths, relationships, death, profile_picture, ...personData } = req.body;
 
         // --- Add missing parent spouses as parents ---
         if (Array.isArray(relationships)) {
@@ -321,7 +364,29 @@ router.post("/members", (req, res, next) => {
         // Insert person first to get the personId
         const [person] = await trx("persons").insert(personData).returning("*");
         const personId = person.id || person;
+        log("Inserted person with id:", personId);
 
+        // Handle profile picture from URL (for JSON body)
+        if (profile_picture && typeof profile_picture === "string" && profile_picture.startsWith("http")) {
+          log("Downloading profile picture from URL for person:", personId, profile_picture);
+          const safeFirst = String(personData.first_name).replace(/[^a-zA-Z0-9]/g, "");
+          const safeLast = String(personData.last_name).replace(/[^a-zA-Z0-9]/g, "");
+          const personName = `${safeFirst}_${safeLast}`.replace(/_+$/, "");
+          const newFileName = `${personName}_${personId}.jpeg`;
+          const imagesDir = path.join(__dirname, "../../public/images");
+          const newFilePath = path.join(imagesDir, newFileName);
+          if (fs.existsSync(newFilePath)) fs.unlinkSync(newFilePath);
+          try {
+            await downloadImageToFile(profile_picture, newFilePath);
+            await trx("persons").where({ id: personId }).update({
+              profile_picture: `/images/${newFileName}`
+            });
+          } catch (err) {
+            log("Failed to download image from URL:", err.message);
+          }
+        }
+
+        // Insert deaths if provided
         if (Array.isArray(deaths) && deaths.length > 0) {
           for (const death of deaths) {
             await trx("deaths").insert({
@@ -405,11 +470,13 @@ router.post("/members", (req, res, next) => {
             }
           }
         }
+        log("Committing transaction for person:", personId);
         await trx.commit();
-        // Invalidate tree cache for this person and ancestors
         await invalidateFamilyTreeCache(personId, db);
+        log("Family member added successfully:", personId);
         res.json({ message: "Family member added successfully!", id: personId });
       } catch (error) {
+        log("Error adding family member:", error.message);
         await trx.rollback();
         res.status(500).json({ error: error.message || "Error adding family member" });
       }
@@ -419,6 +486,7 @@ router.post("/members", (req, res, next) => {
 
 // Delete a family member
 router.delete("/members/:id", async (req, res) => {
+  log("DELETE /members/:id called with id:", req.params.id);
   try {
     const personId = parseInt(req.params.id, 10);
     await db("persons").where({ id: personId }).del();
@@ -583,12 +651,14 @@ router.post("/marriages", async (req, res) => {
 
 // Update an existing family member (with relationships and deaths, and image upload)
 router.put("/members/:id", (req, res, next) => {
+  log("PUT /members/:id called with id:", req.params.id);
   const personId = parseInt(req.params.id, 10);
   if (isNaN(personId)) {
     return res.status(400).json({ error: "Invalid member ID" });
   }
 
   if (req.headers["content-type"] && req.headers["content-type"].includes("multipart/form-data")) {
+    log("Handling multipart/form-data for member update");
     upload.single("profile_picture_file")(req, res, async function (err) {
       if (err) {
         return res.status(400).json({ error: "Image upload failed: " + err.message });
@@ -596,7 +666,7 @@ router.put("/members/:id", (req, res, next) => {
       const trx = await db.transaction();
       try {
         const personDataObj = JSON.parse(req.body.personData);
-        let { deaths, relationships, death, first_name, last_name, ...personData } = personDataObj;
+        let { deaths, relationships, death, first_name, last_name, profile_picture, ...personData } = personDataObj;
 
         // Remove marriages if present
         delete personData.marriages;
@@ -634,7 +704,7 @@ router.put("/members/:id", (req, res, next) => {
           last_name
         });
 
-        // Handle profile picture file
+        // Handle profile picture file or URL
         if (req.file) {
           const ext = path.extname(req.file.originalname);
           const safeFirst = String(first_name).replace(/[^a-zA-Z0-9]/g, "");
@@ -651,6 +721,24 @@ router.put("/members/:id", (req, res, next) => {
           await trx("persons").where({ id: personId }).update({
             profile_picture: `/images/${newFileName}`
           });
+        } else if (profile_picture && typeof profile_picture === "string" && profile_picture.startsWith("http")) {
+          log("Downloading profile picture from URL for person:", personId, profile_picture);
+          // Download image from URL and save as .jpeg with /images/<personname_id>.jpeg
+          const safeFirst = String(first_name).replace(/[^a-zA-Z0-9]/g, "");
+          const safeLast = String(last_name).replace(/[^a-zA-Z0-9]/g, "");
+          const personName = `${safeFirst}_${safeLast}`.replace(/_+$/, "");
+          const newFileName = `${personName}_${personId}.jpeg`;
+          const imagesDir = path.join(__dirname, "../../public/images");
+          const newFilePath = path.join(imagesDir, newFileName);
+          if (fs.existsSync(newFilePath)) fs.unlinkSync(newFilePath);
+          try {
+            await downloadImageToFile(profile_picture, newFilePath);
+            await trx("persons").where({ id: personId }).update({
+              profile_picture: `/images/${newFileName}`
+            });
+          } catch (err) {
+            log("Failed to download image from URL:", err.message);
+          }
         }
 
         // Remove old deaths and insert new ones
@@ -706,7 +794,7 @@ router.put("/members/:id", (req, res, next) => {
     (async () => {
       const trx = await db.transaction();
       try {
-        let { deaths, relationships, death, ...personData } = req.body;
+        let { deaths, relationships, death, profile_picture, ...personData } = req.body;
         delete personData.marriages;
 
         // --- Add missing parent spouses as parents (same as POST) ---
@@ -737,6 +825,26 @@ router.put("/members/:id", (req, res, next) => {
 
         // Update person
         await trx("persons").where({ id: personId }).update(personData);
+
+        // Handle profile picture from URL (for JSON body)
+        if (profile_picture && typeof profile_picture === "string" && profile_picture.startsWith("http")) {
+          log("Downloading profile picture from URL for person:", personId, profile_picture);
+          const safeFirst = String(personData.first_name).replace(/[^a-zA-Z0-9]/g, "");
+          const safeLast = String(personData.last_name).replace(/[^a-zA-Z0-9]/g, "");
+          const personName = `${safeFirst}_${safeLast}`.replace(/_+$/, "");
+          const newFileName = `${personName}_${personId}.jpeg`;
+          const imagesDir = path.join(__dirname, "../../public/images");
+          const newFilePath = path.join(imagesDir, newFileName);
+          if (fs.existsSync(newFilePath)) fs.unlinkSync(newFilePath);
+          try {
+            await downloadImageToFile(profile_picture, newFilePath);
+            await trx("persons").where({ id: personId }).update({
+              profile_picture: `/images/${newFileName}`
+            });
+          } catch (err) {
+            log("Failed to download image from URL:", err.message);
+          }
+        }
 
         // Remove old deaths and insert new ones
         await trx("deaths").where({ person_id: personId }).del();
@@ -792,6 +900,7 @@ router.put("/members/:id", (req, res, next) => {
 
 // Delete a family member
 router.delete("/members/:id", async (req, res) => {
+  log("DELETE /members/:id called with id:", req.params.id);
   try {
     const personId = parseInt(req.params.id, 10);
     await db("persons").where({ id: personId }).del();

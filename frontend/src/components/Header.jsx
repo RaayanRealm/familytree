@@ -41,7 +41,7 @@ const Header = () => {
                 <ul>
                     <li><Link to="/">Home</Link></li>
                     <li className="dropdown">
-                        <span>Add ▼</span>
+                        <span>Add</span>
                         <ul className="dropdown-menu">
                             <li>
                                 <Link to="/add-member" className="add-member-header-btn">
@@ -74,11 +74,31 @@ const Header = () => {
                                             ...base,
                                             minWidth: 180,
                                             maxWidth: 260,
-                                            margin: "0.2rem 0"
+                                            margin: "0.2rem 0",
+                                            zIndex: 1200, // ensure above content
+                                        }),
+                                        control: base => ({
+                                            ...base,
+                                            background: "#f8fafc", // light background for input
+                                            color: "#222",
+                                            borderColor: "#01a982",
+                                            minHeight: 36,
+                                            boxShadow: "none"
                                         }),
                                         menu: base => ({
                                             ...base,
-                                            zIndex: 9999
+                                            zIndex: 2000, // ensure above dialogs/pages
+                                            background: "#fff",
+                                            color: "#222",
+                                            border: "1px solid #01a982"
+                                        }),
+                                        option: base => ({
+                                            ...base,
+                                            color: "#222",
+                                            background: "#fff",
+                                            "&:hover": {
+                                                background: "#e6f7f3"
+                                            }
                                         })
                                     }}
                                 />
@@ -86,7 +106,7 @@ const Header = () => {
                         </ul>
                     </li>
                     <li className="dropdown">
-                        <span>Help ▼</span>
+                        <span>Help</span>
                         <ul className="dropdown-menu">
                             <li><Link to="/help/faq">FAQ</Link></li>
                             <li><Link to="/help/contact">Contact Us</Link></li>
