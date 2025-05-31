@@ -5,6 +5,16 @@ const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
+const cloudinary = require('cloudinary').v2;
+const isDev = process.env.DEV === "true";
+
+if (!isDev) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
+}
 
 // Set up multer for image uploads (move this to the top, outside the route)
 const storage = multer.diskStorage({
@@ -23,7 +33,7 @@ const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } }); // <-
 
 // Add this at the top for consistent logging
 const log = (...args) => console.log("[familyRoutes]", ...args);
-
+log("Family routes initialized with devmode:", isDev);
 // Get all family members with related info
 router.get("/members", async (req, res) => {
   log("GET /members called");
@@ -145,6 +155,26 @@ async function downloadImageToFile(url, destPath) {
   });
 }
 
+// Helper to upload image buffer/file to Cloudinary and get URL
+async function uploadToCloudinary(filePath, publicId) {
+  return cloudinary.uploader.upload(filePath, {
+    public_id: publicId,
+    folder: "familytree",
+    overwrite: true,
+    resource_type: "image"
+  });
+}
+
+// Helper to upload image from URL to Cloudinary
+async function uploadUrlToCloudinary(imageUrl, publicId) {
+  return cloudinary.uploader.upload(imageUrl, {
+    public_id: publicId,
+    folder: "familytree",
+    overwrite: true,
+    resource_type: "image"
+  });
+}
+
 // Add a new family member (with relationships and deaths, and image upload)
 router.post("/members", (req, res, next) => {
   log("POST /members called");
@@ -200,36 +230,68 @@ router.post("/members", (req, res, next) => {
         log("Inserted person with id:", personId);
 
         // Handle profile picture file or URL
-        if (req.file) {
-          // Build new filename as FirstName_LastName_personId.ext
-          const ext = path.extname(req.file.originalname);
-          const safeFirst = String(first_name).replace(/[^a-zA-Z0-9]/g, "");
-          const safeLast = String(last_name).replace(/[^a-zA-Z0-9]/g, "");
-          const newFileName = `${safeFirst}_${safeLast}_${personId}${ext}`;
-          const imagesDir = path.join(__dirname, "../../public/images");
-          const newFilePath = path.join(imagesDir, newFileName);
-          if (fs.existsSync(newFilePath)) fs.unlinkSync(newFilePath);
-          fs.renameSync(req.file.path, newFilePath);
-          await trx("persons").where({ id: personId }).update({
-            profile_picture: `/images/${newFileName}`
-          });
-        } else if (profile_picture && typeof profile_picture === "string" && profile_picture.startsWith("http")) {
-          log("Downloading profile picture from URL for person:", personId, profile_picture);
-          // Download image from URL and save as .jpeg with /images/<personname_id>.jpeg
-          const safeFirst = String(first_name).replace(/[^a-zA-Z0-9]/g, "");
-          const safeLast = String(last_name).replace(/[^a-zA-Z0-9]/g, "");
-          const personName = `${safeFirst}_${safeLast}`.replace(/_+$/, "");
-          const newFileName = `${personName}_${personId}.jpeg`;
-          const imagesDir = path.join(__dirname, "../../public/images");
-          const newFilePath = path.join(imagesDir, newFileName);
-          if (fs.existsSync(newFilePath)) fs.unlinkSync(newFilePath);
-          try {
-            await downloadImageToFile(profile_picture, newFilePath);
+        if (isDev) {
+          // Local storage as before
+          if (req.file) {
+            const ext = path.extname(req.file.originalname);
+            const safeFirst = String(first_name).replace(/[^a-zA-Z0-9]/g, "");
+            const safeLast = String(last_name).replace(/[^a-zA-Z0-9]/g, "");
+            const newFileName = `${safeFirst}_${safeLast}_${personId}${ext}`;
+            const imagesDir = path.join(__dirname, "../../public/images");
+            const newFilePath = path.join(imagesDir, newFileName);
+            if (fs.existsSync(newFilePath)) fs.unlinkSync(newFilePath);
+            fs.renameSync(req.file.path, newFilePath);
             await trx("persons").where({ id: personId }).update({
               profile_picture: `/images/${newFileName}`
             });
-          } catch (err) {
-            log("Failed to download image from URL:", err.message);
+          } else if (profile_picture && typeof profile_picture === "string" && profile_picture.startsWith("http")) {
+            // Download and save locally as before
+            const safeFirst = String(first_name).replace(/[^a-zA-Z0-9]/g, "");
+            const safeLast = String(last_name).replace(/[^a-zA-Z0-9]/g, "");
+            const personName = `${safeFirst}_${safeLast}`.replace(/_+$/, "");
+            const newFileName = `${personName}_${personId}.jpeg`;
+            const imagesDir = path.join(__dirname, "../../public/images");
+            const newFilePath = path.join(imagesDir, newFileName);
+            if (fs.existsSync(newFilePath)) fs.unlinkSync(newFilePath);
+            try {
+              await downloadImageToFile(profile_picture, newFilePath);
+              await trx("persons").where({ id: personId }).update({
+                profile_picture: `/images/${newFileName}`
+              });
+            } catch (err) {
+              log("Failed to download image from URL:", err.message);
+            }
+          }
+        } else {
+          // Cloudinary logic
+          let cloudinaryUrl = null;
+          if (req.file) {
+            const safeFirst = String(first_name).replace(/[^a-zA-Z0-9]/g, "");
+            const safeLast = String(last_name).replace(/[^a-zA-Z0-9]/g, "");
+            const publicId = `${safeFirst}_${safeLast}_${personId}`;
+            try {
+              const result = await uploadToCloudinary(req.file.path, publicId);
+              cloudinaryUrl = result.secure_url;
+              await trx("persons").where({ id: personId }).update({
+                profile_picture: cloudinaryUrl
+              });
+              fs.unlinkSync(req.file.path);
+            } catch (err) {
+              log("Cloudinary upload failed:", err.message);
+            }
+          } else if (profile_picture && typeof profile_picture === "string" && profile_picture.startsWith("http")) {
+            const safeFirst = String(first_name).replace(/[^a-zA-Z0-9]/g, "");
+            const safeLast = String(last_name).replace(/[^a-zA-Z0-9]/g, "");
+            const publicId = `${safeFirst}_${safeLast}_${personId}`;
+            try {
+              const result = await uploadUrlToCloudinary(profile_picture, publicId);
+              cloudinaryUrl = result.secure_url;
+              await trx("persons").where({ id: personId }).update({
+                profile_picture: cloudinaryUrl
+              });
+            } catch (err) {
+              log("Cloudinary upload from URL failed:", err.message);
+            }
           }
         }
 
@@ -705,39 +767,65 @@ router.put("/members/:id", (req, res, next) => {
         });
 
         // Handle profile picture file or URL
-        if (req.file) {
-          const ext = path.extname(req.file.originalname);
-          const safeFirst = String(first_name).replace(/[^a-zA-Z0-9]/g, "");
-          const safeLast = String(last_name).replace(/[^a-zA-Z0-9]/g, "");
-          const newFileName = `${safeFirst}_${safeLast}_${personId}${ext}`;
-          const imagesDir = path.join(__dirname, "../../public/images");
-          const newFilePath = path.join(imagesDir, newFileName);
-
-          if (fs.existsSync(newFilePath)) {
-            fs.unlinkSync(newFilePath);
-          }
-          fs.renameSync(req.file.path, newFilePath);
-
-          await trx("persons").where({ id: personId }).update({
-            profile_picture: `/images/${newFileName}`
-          });
-        } else if (profile_picture && typeof profile_picture === "string" && profile_picture.startsWith("http")) {
-          log("Downloading profile picture from URL for person:", personId, profile_picture);
-          // Download image from URL and save as .jpeg with /images/<personname_id>.jpeg
-          const safeFirst = String(first_name).replace(/[^a-zA-Z0-9]/g, "");
-          const safeLast = String(last_name).replace(/[^a-zA-Z0-9]/g, "");
-          const personName = `${safeFirst}_${safeLast}`.replace(/_+$/, "");
-          const newFileName = `${personName}_${personId}.jpeg`;
-          const imagesDir = path.join(__dirname, "../../public/images");
-          const newFilePath = path.join(imagesDir, newFileName);
-          if (fs.existsSync(newFilePath)) fs.unlinkSync(newFilePath);
-          try {
-            await downloadImageToFile(profile_picture, newFilePath);
+        if (isDev) {
+          if (req.file) {
+            const ext = path.extname(req.file.originalname);
+            const safeFirst = String(first_name).replace(/[^a-zA-Z0-9]/g, "");
+            const safeLast = String(last_name).replace(/[^a-zA-Z0-9]/g, "");
+            const newFileName = `${safeFirst}_${safeLast}_${personId}${ext}`;
+            const imagesDir = path.join(__dirname, "../../public/images");
+            const newFilePath = path.join(imagesDir, newFileName);
+            if (fs.existsSync(newFilePath)) fs.unlinkSync(newFilePath);
+            fs.renameSync(req.file.path, newFilePath);
             await trx("persons").where({ id: personId }).update({
               profile_picture: `/images/${newFileName}`
             });
-          } catch (err) {
-            log("Failed to download image from URL:", err.message);
+          } else if (profile_picture && typeof profile_picture === "string" && profile_picture.startsWith("http")) {
+            const safeFirst = String(first_name).replace(/[^a-zA-Z0-9]/g, "");
+            const safeLast = String(last_name).replace(/[^a-zA-Z0-9]/g, "");
+            const personName = `${safeFirst}_${safeLast}`.replace(/_+$/, "");
+            const newFileName = `${personName}_${personId}.jpeg`;
+            const imagesDir = path.join(__dirname, "../../public/images");
+            const newFilePath = path.join(imagesDir, newFileName);
+            if (fs.existsSync(newFilePath)) fs.unlinkSync(newFilePath);
+            try {
+              await downloadImageToFile(profile_picture, newFilePath);
+              await trx("persons").where({ id: personId }).update({
+                profile_picture: `/images/${newFileName}`
+              });
+            } catch (err) {
+              log("Failed to download image from URL:", err.message);
+            }
+          }
+        } else {
+          let cloudinaryUrl = null;
+          if (req.file) {
+            const safeFirst = String(first_name).replace(/[^a-zA-Z0-9]/g, "");
+            const safeLast = String(last_name).replace(/[^a-zA-Z0-9]/g, "");
+            const publicId = `${safeFirst}_${safeLast}_${personId}`;
+            try {
+              const result = await uploadToCloudinary(req.file.path, publicId);
+              cloudinaryUrl = result.secure_url;
+              await trx("persons").where({ id: personId }).update({
+                profile_picture: cloudinaryUrl
+              });
+              fs.unlinkSync(req.file.path);
+            } catch (err) {
+              log("Cloudinary upload failed:", err.message);
+            }
+          } else if (profile_picture && typeof profile_picture === "string" && profile_picture.startsWith("http")) {
+            const safeFirst = String(first_name).replace(/[^a-zA-Z0-9]/g, "");
+            const safeLast = String(last_name).replace(/[^a-zA-Z0-9]/g, "");
+            const publicId = `${safeFirst}_${safeLast}_${personId}`;
+            try {
+              const result = await uploadUrlToCloudinary(profile_picture, publicId);
+              cloudinaryUrl = result.secure_url;
+              await trx("persons").where({ id: personId }).update({
+                profile_picture: cloudinaryUrl
+              });
+            } catch (err) {
+              log("Cloudinary upload from URL failed:", err.message);
+            }
           }
         }
 
