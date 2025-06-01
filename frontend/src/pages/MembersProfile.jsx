@@ -3,6 +3,8 @@ import { useParams, Link } from "react-router-dom";
 import { getFamilyMember, getMemberRelations } from "../services/api";
 import "../styles/MembersProfile.css";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+
 const formatDate = (dateStr) => {
   if (!dateStr) return "";
   const date = new Date(dateStr);
@@ -60,7 +62,16 @@ const MemberProfile = () => {
   return (
     <div className="member-profile">
       <div className="profile-header">
-        <img src={`http://localhost:5000${member.profile_picture}`} alt={member.first_name} />
+        <img
+          src={
+            member.profile_picture
+              ? member.profile_picture.startsWith("http")
+                ? member.profile_picture
+                : `${API_BASE_URL}${member.profile_picture}`
+              : ""
+          }
+          alt={member.first_name}
+        />
         <div className="profile-info">
           <h2>{member.first_name} {member.last_name}</h2>
           <p><span className="profile-label">Nickname:</span> <span className="profile-value">{member.nickname}</span></p>

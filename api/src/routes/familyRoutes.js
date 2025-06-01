@@ -7,7 +7,6 @@ const path = require("path");
 const axios = require("axios");
 const cloudinary = require('cloudinary').v2;
 const isDev = process.env.DEV === "true";
-log("ENV DEV:", process.env.DEV, "isDev:", isDev, "NODE_ENV:", process.env.NODE_ENV, "Vercel:", !!process.env.VERCEL);
 
 // Set up multer for image uploads (move this to the top, outside the route)
 const storage = multer.diskStorage({
@@ -30,7 +29,22 @@ const log = (...args) => {
   console.log("[familyRoutes]", ...args);
   // Optionally, send to Cloudinary if needed (not required for debugging)
 };
-log("Family routes initialized with devmode:", isDev);
+
+if (!isDev) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
+  log("Cloudinary config set:", {
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: !!process.env.CLOUDINARY_API_KEY,
+    api_secret: !!process.env.CLOUDINARY_API_SECRET
+  });
+}
+
+log("ENV DEV:", process.env.DEV, "isDev:", isDev, "NODE_ENV:", process.env.NODE_ENV, "Vercel:", !!process.env.VERCEL);
+
 // Get all family members with related info
 router.get("/members", async (req, res) => {
   log("GET /members called");
@@ -430,21 +444,39 @@ router.post("/members", (req, res, next) => {
 
         // Handle profile picture from URL (for JSON body)
         if (profile_picture && typeof profile_picture === "string" && profile_picture.startsWith("http")) {
-          log("Downloading profile picture from URL for person:", personId, profile_picture);
-          const safeFirst = String(personData.first_name).replace(/[^a-zA-Z0-9]/g, "");
-          const safeLast = String(personData.last_name).replace(/[^a-zA-Z0-9]/g, "");
-          const personName = `${safeFirst}_${safeLast}`.replace(/_+$/, "");
-          const newFileName = `${personName}_${personId}.jpeg`;
-          const imagesDir = path.join(__dirname, "../../public/images");
-          const newFilePath = path.join(imagesDir, newFileName);
-          if (fs.existsSync(newFilePath)) fs.unlinkSync(newFilePath);
-          try {
-            await downloadImageToFile(profile_picture, newFilePath);
-            await trx("persons").where({ id: personId }).update({
-              profile_picture: `/images/${newFileName}`
-            });
-          } catch (err) {
-            log("Failed to download image from URL:", err.message);
+          if (isDev) {
+            log("DEV MODE: using local file storage for images");
+            // Local storage as before
+            const safeFirst = String(personData.first_name).replace(/[^a-zA-Z0-9]/g, "");
+            const safeLast = String(personData.last_name).replace(/[^a-zA-Z0-9]/g, "");
+            const personName = `${safeFirst}_${safeLast}`.replace(/_+$/, "");
+            const newFileName = `${personName}_${personId}.jpeg`;
+            const imagesDir = path.join(__dirname, "../../public/images");
+            const newFilePath = path.join(imagesDir, newFileName);
+            if (fs.existsSync(newFilePath)) fs.unlinkSync(newFilePath);
+            try {
+              await downloadImageToFile(profile_picture, newFilePath);
+              await trx("persons").where({ id: personId }).update({
+                profile_picture: `/images/${newFileName}`
+              });
+            } catch (err) {
+              log("Failed to download image from URL:", err.message);
+            }
+          } else {
+            // PROD: Always use Cloudinary, never write to local disk
+            const safeFirst = String(personData.first_name).replace(/[^a-zA-Z0-9]/g, "");
+            const safeLast = String(personData.last_name).replace(/[^a-zA-Z0-9]/g, "");
+            const publicId = `${safeFirst}_${safeLast}_${personId}`;
+            try {
+              log("Uploading image URL to Cloudinary (no local save):", profile_picture, publicId);
+              const result = await uploadUrlToCloudinary(profile_picture, publicId);
+              await trx("persons").where({ id: personId }).update({
+                profile_picture: result.secure_url
+              });
+            } catch (err) {
+              log("Cloudinary upload from URL failed:", err.message);
+              return res.status(500).json({ error: "Cloudinary upload from URL failed: " + err.message });
+            }
           }
         }
 
@@ -573,29 +605,6 @@ router.get("/events", async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: "Error fetching events" });
   }
-});
-
-// Help FAQ
-router.get("/help/faq", (req, res) => {
-  res.json([
-    { question: "How do I add a new family member?", answer: "Click the 'Add' button in the header and fill the form." },
-    { question: "How do I upload a profile picture?", answer: "You can upload an image file or paste an image URL in the add member form." },
-    { question: "How are relationships managed?", answer: "Add relationships in the add member form. The system will auto-link relatives." }
-  ]);
-});
-
-// Help About
-router.get("/help/about", (req, res) => {
-  res.json({
-    about: "Family Tree is a platform to manage and visualize your family history, relationships, and events. It helps you keep track of your lineage and connect with relatives."
-  });
-});
-
-// Help Contact
-router.get("/help/contact", (req, res) => {
-  res.json({
-    contact: "For support, email us at support@familytree.com or call +1-800-FAMILY."
-  });
 });
 
 // In-memory cache for family trees
@@ -942,6 +951,7 @@ router.put("/members/:id", (req, res, next) => {
               log("Failed to download image from URL:", err.message);
             }
           } else {
+            // PROD: Always use Cloudinary, never write to local disk
             const safeFirst = String(personData.first_name).replace(/[^a-zA-Z0-9]/g, "");
             const safeLast = String(personData.last_name).replace(/[^a-zA-Z0-9]/g, "");
             const publicId = `${safeFirst}_${safeLast}_${personId}`;
@@ -1058,7 +1068,7 @@ router.get("/help/about", (req, res) => {
 // Help Contact
 router.get("/help/contact", (req, res) => {
   res.json({
-    contact: "For support, email us at support@familytree.com or call +1-800-FAMILY."
+    contact: "For support, email us at raayany@outlook.com.com"
   });
 });
 
@@ -1173,4 +1183,346 @@ router.post("/marriages", async (req, res) => {
   }
 });
 
+// Update an existing family member (with relationships and deaths, and image upload)
+router.put("/members/:id", (req, res, next) => {
+  log("PUT /members/:id called, isDev:", isDev, "content-type:", req.headers["content-type"]);
+  const personId = parseInt(req.params.id, 10);
+  if (isNaN(personId)) {
+    return res.status(400).json({ error: "Invalid member ID" });
+  }
+
+  if (req.headers["content-type"] && req.headers["content-type"].includes("multipart/form-data")) {
+    log("Handling multipart/form-data for member update");
+    upload.single("profile_picture_file")(req, res, async function (err) {
+      log("PUT /members/:id multer upload, isDev:", isDev, "req.file:", !!req.file);
+      if (err) {
+        return res.status(400).json({ error: "Image upload failed: " + err.message });
+      }
+      const trx = await db.transaction();
+      try {
+        const personDataObj = JSON.parse(req.body.personData);
+        let { deaths, relationships, death, first_name, last_name, profile_picture, ...personData } = personDataObj;
+
+        // Remove marriages if present
+        delete personData.marriages;
+
+        // --- Add missing parent spouses as parents (same as POST) ---
+        if (Array.isArray(relationships)) {
+          const parentIds = relationships
+            .filter(r => r.relationship_type === "Parent")
+            .map(r => r.relative_id);
+
+          for (const parentId of parentIds) {
+            const spouseRows = await db("relationships")
+              .where({ person_id: parentId, relationship_type: "Spouse" })
+              .select("relative_id");
+            for (const spouse of spouseRows) {
+              if (
+                !relationships.some(
+                  r => r.relationship_type === "Parent" && r.relative_id === spouse.relative_id
+                )
+              ) {
+                relationships.push({
+                  relative_id: spouse.relative_id,
+                  relationship_type: "Parent"
+                });
+              }
+            }
+          }
+        }
+        // --- End add missing parent spouses ---
+
+        // Update person
+        await trx("persons").where({ id: personId }).update({
+          ...personData,
+          first_name,
+          last_name
+        });
+
+        // Handle profile picture file or URL
+        if (isDev) {
+          log("DEV MODE: using local file storage for images");
+          // Local storage as before
+          if (req.file) {
+            const ext = path.extname(req.file.originalname);
+            const safeFirst = String(first_name).replace(/[^a-zA-Z0-9]/g, "");
+            const safeLast = String(last_name).replace(/[^a-zA-Z0-9]/g, "");
+            const newFileName = `${safeFirst}_${safeLast}_${personId}${ext}`;
+            const imagesDir = path.join(__dirname, "../../public/images");
+            const newFilePath = path.join(imagesDir, newFileName);
+            if (fs.existsSync(newFilePath)) fs.unlinkSync(newFilePath);
+            fs.renameSync(req.file.path, newFilePath);
+            await trx("persons").where({ id: personId }).update({
+              profile_picture: `/images/${newFileName}`
+            });
+          } else if (profile_picture && typeof profile_picture === "string" && profile_picture.startsWith("http")) {
+            // Download and save locally as before
+            const safeFirst = String(first_name).replace(/[^a-zA-Z0-9]/g, "");
+            const safeLast = String(last_name).replace(/[^a-zA-Z0-9]/g, "");
+            const personName = `${safeFirst}_${safeLast}`.replace(/_+$/, "");
+            const newFileName = `${personName}_${personId}.jpeg`;
+            const imagesDir = path.join(__dirname, "../../public/images");
+            const newFilePath = path.join(imagesDir, newFileName);
+            if (fs.existsSync(newFilePath)) fs.unlinkSync(newFilePath);
+            try {
+              await downloadImageToFile(profile_picture, newFilePath);
+              await trx("persons").where({ id: personId }).update({
+                profile_picture: `/images/${newFileName}`
+              });
+            } catch (err) {
+              log("Failed to download image from URL:", err.message);
+            }
+          }
+        } else {
+          log("PROD MODE: using Cloudinary for images");
+          // Always use Cloudinary in production, never write to local disk
+          if (req.file) {
+            const safeFirst = String(first_name).replace(/[^a-zA-Z0-9]/g, "");
+            const safeLast = String(last_name).replace(/[^a-zA-Z0-9]/g, "");
+            const publicId = `${safeFirst}_${safeLast}_${personId}`;
+            try {
+              log("Uploading file to Cloudinary (no local save):", req.file.path, publicId);
+              const result = await uploadToCloudinary(req.file.path, publicId);
+              await trx("persons").where({ id: personId }).update({
+                profile_picture: result.secure_url
+              });
+              fs.unlinkSync(req.file.path);
+            } catch (err) {
+              log("Cloudinary upload failed:", err.message);
+              return res.status(500).json({ error: "Cloudinary upload failed: " + err.message });
+            }
+          } else if (profile_picture && typeof profile_picture === "string" && profile_picture.startsWith("http")) {
+            const safeFirst = String(first_name).replace(/[^a-zA-Z0-9]/g, "");
+            const safeLast = String(last_name).replace(/[^a-zA-Z0-9]/g, "");
+            const publicId = `${safeFirst}_${safeLast}_${personId}`;
+            try {
+              log("Uploading image URL to Cloudinary (no local save):", profile_picture, publicId);
+              const result = await uploadUrlToCloudinary(profile_picture, publicId);
+              await trx("persons").where({ id: personId }).update({
+                profile_picture: result.secure_url
+              });
+            } catch (err) {
+              log("Cloudinary upload from URL failed:", err.message);
+              return res.status(500).json({ error: "Cloudinary upload from URL failed: " + err.message });
+            }
+          }
+        }
+
+        // Remove old deaths and insert new ones
+        await trx("deaths").where({ person_id: personId }).del();
+        if (Array.isArray(deaths) && deaths.length > 0) {
+          for (const death of deaths) {
+            await trx("deaths").insert({
+              person_id: personId,
+              date: death.date || null,
+              cause: death.cause || null,
+              place: death.place || null,
+              obituary: death.obituary || null
+            });
+          }
+        }
+
+        // Remove old relationships and insert new ones
+        await trx("relationships").where({ person_id: personId }).del();
+        if (Array.isArray(relationships) && relationships.length > 0) {
+          for (const rel of relationships) {
+            if (!["Parent", "Child", "Sibling", "Spouse"].includes(rel.relationship_type)) continue;
+            await trx("relationships").insert({
+              person_id: personId,
+              relative_id: rel.relative_id,
+              relationship_type: rel.relationship_type
+            });
+            let reverseType = null;
+            switch (rel.relationship_type) {
+              case "Parent": reverseType = "Child"; break;
+              case "Child": reverseType = "Parent"; break;
+              case "Sibling": reverseType = "Sibling"; break;
+              case "Spouse": reverseType = "Spouse"; break;
+            }
+            if (reverseType) {
+              await trx("relationships").insert({
+                person_id: rel.relative_id,
+                relative_id: personId,
+                relationship_type: reverseType
+              });
+            }
+          }
+        }
+
+        await trx.commit();
+        await invalidateFamilyTreeCache(personId, db);
+        res.json({ message: "Family member updated successfully!", id: personId });
+      } catch (error) {
+        await trx.rollback();
+        res.status(500).json({ error: error.message || "Error updating family member" });
+      }
+    })();
+  }
+});
+
+// Delete a family member
+router.delete("/members/:id", async (req, res) => {
+  log("DELETE /members/:id called with id:", req.params.id);
+  try {
+    const personId = parseInt(req.params.id, 10);
+    await db("persons").where({ id: personId }).del();
+    await invalidateFamilyTreeCache(personId, db);
+    res.json({ message: "Family member deleted successfully!" });
+  } catch (error) {
+    res.status(500).json({ error: "Error deleting family member" });
+  }
+});
+
+// Get all family events with organizer name
+router.get("/events", async (req, res) => {
+  try {
+    const events = await db("family_events")
+      .leftJoin("persons", "family_events.organizer_id", "persons.id")
+      .select(
+        "family_events.*",
+        db.raw("CONCAT(persons.first_name, ' ', persons.last_name) as organizer_name")
+      )
+      .orderBy("event_date", "desc");
+    res.json(events);
+  } catch (error) {
+    res.status(500).json({ error: "Error fetching events" });
+  }
+});
+
+// Help FAQ
+router.get("/help/faq", (req, res) => {
+  res.json([
+    { question: "How do I add a new family member?", answer: "Click the 'Add' button in the header and fill the form." },
+    { question: "How do I upload a profile picture?", answer: "You can upload an image file or paste an image URL in the add member form." },
+    { question: "How are relationships managed?", answer: "Add relationships in the add member form. The system will auto-link relatives." }
+  ]);
+});
+
+// Help About
+router.get("/help/about", (req, res) => {
+  res.json({
+    about: "Family Tree is a platform to manage and visualize your family history, relationships, and events. It helps you keep track of your lineage and connect with relatives."
+  });
+});
+
+// Help Contact
+router.get("/help/contact", (req, res) => {
+  res.json({
+    contact: "For support, email us at raayany@outlook.com.com"
+  });
+});
+
+
+// Helper to invalidate cache for a person and their ancestors
+async function invalidateFamilyTreeCache(personId, db) {
+  // Remove this person's tree from cache
+  delete familyTreeCache[personId];
+  // Invalidate all ancestors' trees (parents, recursively)
+  const parentRels = await db("relationships")
+    .where({ relative_id: personId, relationship_type: "Child" });
+  for (const rel of parentRels) {
+    await invalidateFamilyTreeCache(rel.person_id, db);
+  }
+}
+
+// Recursive function to build descendants tree for a person
+async function buildFamilyTree(personId, db) {
+  // Check cache first
+  if (familyTreeCache[personId]) {
+    return familyTreeCache[personId];
+  }
+
+  const person = await db("persons").where({ id: personId }).first();
+  if (!person) return null;
+
+  // Get spouse(s)
+  const spouses = await db("relationships")
+    .where({ person_id: personId, relationship_type: "Spouse" })
+    .join("persons", "relationships.relative_id", "persons.id")
+    .select("persons.id", "persons.first_name", "persons.last_name", "persons.profile_picture");
+
+  // Get children
+  const childrenRels = await db("relationships")
+    .where({ person_id: personId, relationship_type: "Child" });
+
+  const children = [];
+  for (const rel of childrenRels) {
+    const childTree = await buildFamilyTree(rel.relative_id, db);
+    if (childTree) children.push(childTree);
+  }
+
+  // Prepare node for react-d3-tree
+  const node = {
+    name: `${person.first_name} ${person.last_name}`,
+    attributes: {
+      id: person.id,
+      profile_picture: person.profile_picture || null,
+      spouses: spouses.map(s => ({
+        id: s.id,
+        name: `${s.first_name} ${s.last_name}`,
+        profile_picture: s.profile_picture || null
+      }))
+    }
+  };
+
+  if (children.length > 0) {
+    node.children = children;
+  }
+
+  // Cache the result
+  familyTreeCache[personId] = node;
+  return node;
+}
+
+// Endpoint to get family tree for a person
+router.get("/tree/:id", async (req, res) => {
+  const personId = parseInt(req.params.id, 10);
+  if (isNaN(personId)) return res.status(400).json({ error: "Invalid ID" });
+
+  try {
+    const tree = await buildFamilyTree(personId, db);
+    res.json(tree);
+  } catch (error) {
+    res.status(500).json({ error: "Error building family tree" });
+  }
+});
+
+// Example for delete member:
+router.delete("/members/:id", async (req, res) => {
+  try {
+    const personId = parseInt(req.params.id, 10);
+    await db("persons").where({ id: personId }).del();
+    await invalidateFamilyTreeCache(personId, db);
+    res.json({ message: "Family member deleted successfully!" });
+  } catch (error) {
+    res.status(500).json({ error: "Error deleting family member" });
+  }
+});
+
+// Add a new marriage
+router.post("/marriages", async (req, res) => {
+  try {
+    const { person_id, spouse_id, marriage_date, divorce_date } = req.body;
+    if (!person_id || !spouse_id || person_id === spouse_id) {
+      return res.status(400).json({ error: "Invalid spouse selection." });
+    }
+    await db("marriages").insert({
+      person_id,
+      spouse_id,
+      marriage_date,
+      divorce_date
+    });
+    // Also add relationships as Spouse for both
+    await db("relationships").insert([
+      { person_id, relative_id: spouse_id, relationship_type: "Spouse" },
+      { person_id: spouse_id, relative_id: person_id, relationship_type: "Spouse" }
+    ]);
+    res.json({ message: "Marriage added successfully!" });
+  } catch (error) {
+    res.status(500).json({ error: "Error adding marriage" });
+  }
+});
+
+// Make sure you are exporting the router, not the app/server instance.
+// At the end of this file, you should have:
 module.exports = router;
