@@ -16,8 +16,8 @@ export const getFamilyMember = async (id) => {
 export const getMemberRelations = async (id) => {
   const response = await axios.get(`${API_URL}/relationships/${id}`);
   return response.data.map(relation => ({
-    id: relation.id,
-    name: `${relation.first_name} ${relation.last_name}`,
+    id: relation.relative_id,
+    name: `${relation.relative_name}`,
     type: relation.relationship_type,
   }));
 };

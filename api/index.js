@@ -12,10 +12,7 @@ app.use("/api/family", familyRoutes);
 app.use("/images", express.static(path.join(__dirname, "public/images")));
 
 const PORT = process.env.PORT || 5000;
-if (process.env.VERCEL) {
-    // On Vercel, export the handler
-    module.exports = (req, res) => app(req, res);
-} else {
-    // Local development
-    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
-}
+
+// Always start the server for local/dev, but do NOT export a handler for Vercel here.
+// Vercel should use its own entrypoint (api/family.js or similar).
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

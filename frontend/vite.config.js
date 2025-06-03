@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => {
   dotenv.config({ path: path.resolve(process.cwd(), envFile) });
 
   // Set API base URL
-  const DEV_API_BASE_URL = "http://localhost:3001";
+  const DEV_API_BASE_URL = "http://localhost:5000"; // <-- Use your backend port
   const PROD_API_BASE_URL = process.env.VITE_API_BASE_URL;
 
   const apiBaseUrl = mode === "development" ? DEV_API_BASE_URL : PROD_API_BASE_URL;
@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => {
       proxy: {
         "/api": {
           target: apiBaseUrl,
-          changeOrigin: true,
+          changeOrigin: true, // <-- should be true for most setups
           secure: false,
         },
       },
