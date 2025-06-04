@@ -8,6 +8,7 @@ exports.up = function (knex) {
     ]);
     table.text("additional_info");
     table.unique(["person_id", "relative_id", "relationship_type"]);
+    table.timestamps(true, true);
   });
 };
 

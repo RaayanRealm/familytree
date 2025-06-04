@@ -15,7 +15,7 @@ exports.up = function (knex) {
     table.json("social_media");
     table.text("biography");
     table.string("profile_picture").nullable();
-    table.timestamp("created_at").defaultTo(knex.fn.now());
+    table.timestamps(true, true);
   });
 };
 

@@ -6,6 +6,7 @@ exports.up = function (knex) {
     table.string("cause");
     table.string("place");
     table.text("obituary");
+    table.timestamps(true, true);
   });
 };
 

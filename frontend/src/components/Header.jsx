@@ -1,15 +1,16 @@
 import React from "react";
-import { Link } from "react-router-dom";
-import "../styles/Header.css";
+import { Link, useNavigate } from "react-router-dom";
 import Search from "./Search";
 import { getFamilyMembers } from "../services/api";
 import { useEffect, useState } from "react";
 import AsyncSelect from "react-select/async";
+import "../styles/Header.css";
 
 
-const Header = () => {
+const Header = ({ user, setUser }) => {
     const [members, setMembers] = useState([]);
     const [editMemberId, setEditMemberId] = useState("");
+    const navigate = useNavigate();
 
     useEffect(() => {
         getFamilyMembers().then(setMembers); // ✅ Fetch all members for search
@@ -32,6 +33,14 @@ const Header = () => {
         callback(filtered);
     };
 
+    const handleLogout = () => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        setUser(null);
+        window.dispatchEvent(new Event("userChanged"));
+        navigate("/login");
+    };
+
     return (
         <header className="header">
             <div className="logo-title">
@@ -40,71 +49,73 @@ const Header = () => {
             <nav>
                 <ul>
                     <li><Link to="/">Home</Link></li>
-                    <li className="dropdown">
-                        <span>Add</span>
-                        <ul className="dropdown-menu">
-                            <li>
-                                <Link to="/add-member" className="add-member-header-btn">
-                                    Add Member
-                                </Link>
-                            </li>
-                            <li>
-                                <Link to="/add-marriage" className="add-member-header-btn">
-                                    Add Marriage
-                                </Link>
-                            </li>
-                            <li style={{ minWidth: 220 }}>
-                                <AsyncSelect
-                                    cacheOptions
-                                    loadOptions={loadMemberOptions}
-                                    defaultOptions={members.slice(0, 10).map(m => ({
-                                        value: m.id,
-                                        label: `${m.first_name} ${m.last_name}`
-                                    }))}
-                                    onChange={option => {
-                                        if (option && option.value) {
-                                            window.location.href = `/edit-member/${option.value}`;
-                                        }
-                                    }}
-                                    placeholder="Edit Member..."
-                                    classNamePrefix="relation-async-select"
-                                    isClearable
-                                    styles={{
-                                        container: base => ({
-                                            ...base,
-                                            minWidth: 180,
-                                            maxWidth: 260,
-                                            margin: "0.2rem 0",
-                                            zIndex: 1200, // ensure above content
-                                        }),
-                                        control: base => ({
-                                            ...base,
-                                            background: "#f8fafc", // light background for input
-                                            color: "#222",
-                                            borderColor: "#01a982",
-                                            minHeight: 36,
-                                            boxShadow: "none"
-                                        }),
-                                        menu: base => ({
-                                            ...base,
-                                            zIndex: 2000, // ensure above dialogs/pages
-                                            background: "#fff",
-                                            color: "#222",
-                                            border: "1px solid #01a982"
-                                        }),
-                                        option: base => ({
-                                            ...base,
-                                            color: "#222",
-                                            background: "#fff",
-                                            "&:hover": {
-                                                background: "#e6f7f3"
+                    {user && (user.role === "admin" || user.role === "editor") && (
+                        <li className="dropdown">
+                            <span>Add</span>
+                            <ul className="dropdown-menu">
+                                <li>
+                                    <Link to="/add-member" className="add-member-header-btn">
+                                        Add Member
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link to="/add-marriage" className="add-member-header-btn">
+                                        Add Marriage
+                                    </Link>
+                                </li>
+                                <li style={{ minWidth: 220 }}>
+                                    <AsyncSelect
+                                        cacheOptions
+                                        loadOptions={loadMemberOptions}
+                                        defaultOptions={members.slice(0, 10).map(m => ({
+                                            value: m.id,
+                                            label: `${m.first_name} ${m.last_name}`
+                                        }))}
+                                        onChange={option => {
+                                            if (option && option.value) {
+                                                window.location.href = `/edit-member/${option.value}`;
                                             }
-                                        })
-                                    }}
-                                />
-                            </li>
-                        </ul>
-                    </li>
+                                        }}
+                                        placeholder="Edit Member..."
+                                        classNamePrefix="relation-async-select"
+                                        isClearable
+                                        styles={{
+                                            container: base => ({
+                                                ...base,
+                                                minWidth: 180,
+                                                maxWidth: 260,
+                                                margin: "0.2rem 0",
+                                                zIndex: 1200, // ensure above content
+                                            }),
+                                            control: base => ({
+                                                ...base,
+                                                background: "#f8fafc", // light background for input
+                                                color: "#222",
+                                                borderColor: "#01a982",
+                                                minHeight: 36,
+                                                boxShadow: "none"
+                                            }),
+                                            menu: base => ({
+                                                ...base,
+                                                zIndex: 2000, // ensure above dialogs/pages
+                                                background: "#fff",
+                                                color: "#222",
+                                                border: "1px solid #01a982"
+                                            }),
+                                            option: base => ({
+                                                ...base,
+                                                color: "#222",
+                                                background: "#fff",
+                                                "&:hover": {
+                                                    background: "#e6f7f3"
+                                                }
+                                            })
+                                        }}
+                                    />
+                                </li>
+                            </ul>
+                        </li>
+                    )}
                     <li className="dropdown">
                         <span>Help</span>
                         <ul className="dropdown-menu">
@@ -114,6 +125,15 @@ const Header = () => {
                         </ul>
                     </li>
                     <Search members={members} />
+                    <li>
+                        {!user ? (
+                            <Link to="/login" className="header-login-btn">Sign In</Link>
+                        ) : (
+                            <button className="header-logout-btn" onClick={handleLogout}>
+                                Logout ({user.username})
+                            </button>
+                        )}
+                    </li>
                 </ul>
             </nav>
         </header>

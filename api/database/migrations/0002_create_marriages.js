@@ -1,4 +1,4 @@
-exports.up = function(knex) {
+exports.up = function (knex) {
   return knex.schema.createTable("marriages", table => {
     table.increments("id").primary();
     table.integer("person_id").references("id").inTable("persons").onDelete("CASCADE");
@@ -7,9 +7,10 @@ exports.up = function(knex) {
     table.boolean("anniversary_celebration").defaultTo(true);
     table.date("divorce_date").nullable();
     table.unique(["person_id", "spouse_id"]);
+    table.timestamps(true, true);
   });
 };
 
-exports.down = function(knex) {
+exports.down = function (knex) {
   return knex.schema.dropTable("marriages");
 };

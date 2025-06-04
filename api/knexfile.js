@@ -1,6 +1,5 @@
 require('dotenv').config({ path: __dirname + '/.env' });
 const isDev = process.env.DEV === "true";
-console.log("Knex is using DATABASE_URL:", process.env.DATABASE_URL);
 
 module.exports = {
   client: "pg",
