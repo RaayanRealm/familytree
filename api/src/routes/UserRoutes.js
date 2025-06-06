@@ -120,4 +120,15 @@ router.get("/users/:id", authenticate, async (req, res) => {
     }
 });
 
+// Get all users (admin only)
+router.get("/users", authenticate, async (req, res) => {
+    if (req.user.role !== "admin") return res.status(403).json({ error: "Forbidden" });
+    try {
+        const users = await UserService.getAllUsers(db);
+        res.json({ users });
+    } catch (error) {
+        res.status(500).json({ error: error.message || "Error fetching users" });
+    }
+});
+
 module.exports = router;

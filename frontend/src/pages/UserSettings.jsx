@@ -23,6 +23,18 @@ const UserSettings = () => {
     const [error, setError] = useState("");
     const [successMsg, setSuccessMsg] = useState("");
     const [loading, setLoading] = useState(false);
+    const [showRoleAssign, setShowRoleAssign] = useState(false);
+    const [allUsers, setAllUsers] = useState([]);
+    const [allMembers, setAllMembers] = useState([]);
+    const [selectedUserId, setSelectedUserId] = useState("");
+    const [selectedRole, setSelectedRole] = useState("viewer");
+    const [selectedMemberId, setSelectedMemberId] = useState("");
+    const [roleAssignMsg, setRoleAssignMsg] = useState("");
+    const [roleAssignError, setRoleAssignError] = useState("");
+    const [userSearch, setUserSearch] = useState("");
+    const [memberSearch, setMemberSearch] = useState("");
+    const [userSearchResults, setUserSearchResults] = useState([]);
+    const [memberSearchResults, setMemberSearchResults] = useState([]);
 
     // Fetch user info from API on mount
     useEffect(() => {
@@ -52,6 +64,51 @@ const UserSettings = () => {
         fetchUser();
         // eslint-disable-next-line
     }, []);
+
+    // Fetch all users and members for role/member assignment
+    useEffect(() => {
+        if (showRoleAssign) {
+            fetch(`${API_BASE_URL}/api/users`, {
+                headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+            })
+                .then(res => res.json())
+                .then(data => setAllUsers(data.users || []));
+            fetch(`${API_BASE_URL}/api/family/members`, {
+                headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+            })
+                .then(res => res.json())
+                .then(data => setAllMembers(data || []));
+        }
+    }, [showRoleAssign]);
+
+    // Filter users/members as user types
+    useEffect(() => {
+        if (userSearch.trim()) {
+            setUserSearchResults(
+                allUsers.filter(u =>
+                    (u.name || u.username || "")
+                        .toLowerCase()
+                        .includes(userSearch.toLowerCase())
+                )
+            );
+        } else {
+            setUserSearchResults([]);
+        }
+    }, [userSearch, allUsers]);
+
+    useEffect(() => {
+        if (memberSearch.trim()) {
+            setMemberSearchResults(
+                allMembers.filter(m =>
+                    (`${m.first_name} ${m.last_name}` || "")
+                        .toLowerCase()
+                        .includes(memberSearch.toLowerCase())
+                )
+            );
+        } else {
+            setMemberSearchResults([]);
+        }
+    }, [memberSearch, allMembers]);
 
     const handleChange = e => {
         const { name, value, files } = e.target;
@@ -138,6 +195,35 @@ const UserSettings = () => {
         setLoading(false);
     };
 
+    const handleRoleAssign = async e => {
+        e.preventDefault();
+        setRoleAssignMsg("");
+        setRoleAssignError("");
+        if (!selectedUserId || !selectedRole) {
+            setRoleAssignError("Please select user and role.");
+            return;
+        }
+        try {
+            const body = { role: selectedRole };
+            if (selectedRole === "editor" && selectedMemberId) {
+                body.member_id = selectedMemberId;
+            }
+            const res = await fetch(`${API_BASE_URL}/api/users/${selectedUserId}`, {
+                method: "PUT",
+                headers: { Authorization: `Bearer ${localStorage.getItem("token")}`, "Content-Type": "application/json" },
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+            if (res.ok && data.user) {
+                setRoleAssignMsg("Role/member assigned successfully!");
+            } else {
+                setRoleAssignError(data.error || "Failed to assign role/member.");
+            }
+        } catch (err) {
+            setRoleAssignError("Network error");
+        }
+    };
+
     if (!user) return <div className="user-settings-bg"><div className="user-settings-container"><p>Please sign in.</p></div></div>;
 
     return (
@@ -222,6 +308,105 @@ const UserSettings = () => {
                         {loading ? "Changing..." : "Change Password"}
                     </button>
                 </form>
+                {/* --- Role/Member Assignment Section --- */}
+                {user && user.role === "admin" && (
+                    <div className="user-settings-role-assign">
+                        <label style={{ display: "flex", alignItems: "center", margin: "1.5rem 0 0.5rem 0" }}>
+                            <input
+                                type="checkbox"
+                                checked={showRoleAssign}
+                                onChange={e => setShowRoleAssign(e.target.checked)}
+                                style={{ marginRight: "0.7rem" }}
+                            />
+                            Change/Assign Role
+                        </label>
+                        {showRoleAssign && (
+                            <form className="user-settings-form" onSubmit={handleRoleAssign} style={{ marginTop: "1rem" }}>
+                                <div style={{ marginBottom: "0.7rem" }}>
+                                    <label>User:&nbsp;</label>
+                                    <input
+                                        className="user-settings-input"
+                                        type="text"
+                                        placeholder="Search user by name"
+                                        value={userSearch}
+                                        onChange={e => setUserSearch(e.target.value)}
+                                        style={{ marginBottom: "0.5rem" }}
+                                        autoComplete="off"
+                                    />
+                                    {userSearch && userSearchResults.length > 0 && (
+                                        <div className="user-settings-search-dropdown">
+                                            {userSearchResults.map(u => (
+                                                <div
+                                                    key={u.id}
+                                                    className={`user-settings-search-item${selectedUserId === String(u.id) ? " selected" : ""}`}
+                                                    onClick={() => {
+                                                        setSelectedUserId(u.id);
+                                                        setUserSearch(`${u.username} (${u.name})`);
+                                                        setUserSearchResults([]);
+                                                    }}
+                                                >
+                                                    {u.username} ({u.name})
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                                <div style={{ marginBottom: "0.7rem" }}>
+                                    <label>Role:&nbsp;
+                                        <select
+                                            className="user-settings-input"
+                                            value={selectedRole}
+                                            onChange={e => setSelectedRole(e.target.value)}
+                                            required
+                                        >
+                                            <option value="viewer">Viewer</option>
+                                            <option value="editor">Editor</option>
+                                            <option value="guest">Guest</option>
+                                            <option value="admin">Admin</option>
+                                        </select>
+                                    </label>
+                                </div>
+                                {(selectedRole === "editor") && (
+                                    <div style={{ marginBottom: "0.7rem" }}>
+                                        <label>Assign Member (for lineage):&nbsp;</label>
+                                        <input
+                                            className="user-settings-input"
+                                            type="text"
+                                            placeholder="Search member by name"
+                                            value={memberSearch}
+                                            onChange={e => setMemberSearch(e.target.value)}
+                                            style={{ marginBottom: "0.5rem" }}
+                                            autoComplete="off"
+                                        />
+                                        {memberSearch && memberSearchResults.length > 0 && (
+                                            <div className="user-settings-search-dropdown">
+                                                {memberSearchResults.map(m => (
+                                                    <div
+                                                        key={m.id}
+                                                        className={`user-settings-search-item${selectedMemberId === String(m.id) ? " selected" : ""}`}
+                                                        onClick={() => {
+                                                            setSelectedMemberId(m.id);
+                                                            setMemberSearch(`${m.first_name} ${m.last_name} (ID: ${m.id})`);
+                                                            setMemberSearchResults([]);
+                                                        }}
+                                                    >
+                                                        {m.first_name} {m.last_name} (ID: {m.id})
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                                <button className="user-settings-btn" type="submit">
+                                    Assign Role/Member
+                                </button>
+                                {roleAssignMsg && <div className="user-settings-success">{roleAssignMsg}</div>}
+                                {roleAssignError && <div className="user-settings-error">{roleAssignError}</div>}
+                            </form>
+                        )}
+                    </div>
+                )}
+                {/* --- End Role/Member Assignment Section --- */}
                 {error && <div className="user-settings-error">{error}</div>}
                 {successMsg && <div className="user-settings-success">{successMsg}</div>}
             </div>

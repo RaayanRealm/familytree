@@ -158,10 +158,10 @@ const Header = ({ user, setUser }) => {
                                 >
                                     <img
                                         src={
-                                            user.profile_picture
+                                            user && user.profile_picture
                                                 ? (user.profile_picture.startsWith("http")
                                                     ? user.profile_picture
-                                                    : `${import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/images"}${user.profile_picture}`)
+                                                    : `${import.meta.env.VITE_API_BASE_URL || "http://localhost:5000"}${user.profile_picture}`)
                                                 : "http://localhost:5000/images/default-profile.png"
                                         }
                                         alt="profile"
@@ -173,17 +173,17 @@ const Header = ({ user, setUser }) => {
                                         <div className="header-profile-info">
                                             <img
                                                 src={
-                                                    user.profile_picture
+                                                    user && user.profile_picture
                                                         ? (user.profile_picture.startsWith("http")
                                                             ? user.profile_picture
-                                                            : `${import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/images"}${user.profile_picture}`)
+                                                            : `${import.meta.env.VITE_API_BASE_URL || "http://localhost:5000"}${user.profile_picture}`)
                                                         : "http://localhost:5000/images/default-profile.png"
                                                 }
                                                 alt="profile"
                                                 className="header-profile-pic-large"
                                             />
-                                            <div className="header-profile-username">{user.username}</div>
-                                            <div className="header-profile-name">{user.name}</div>
+                                            <div className="header-profile-username">{user?.username || ""}</div>
+                                            <div className="header-profile-name">{user?.name || ""}</div>
                                         </div>
                                         <button
                                             className="header-profile-settings-btn"

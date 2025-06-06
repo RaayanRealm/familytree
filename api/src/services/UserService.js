@@ -62,6 +62,16 @@ class UserService {
         const row = await db("users").where({ id }).first();
         return row ? new UserDTO(new UserEntity(row)) : null;
     }
+
+    static async getAllUsers(db) {
+        const rows = await db("users").select("*");
+        return rows.map(row => new UserDTO(new UserEntity(row)));
+    }
+
+    static async getUserByMemberId(memberId, db) {
+        const row = await db("users").where({ member_id: memberId }).first();
+        return row ? new UserDTO(new UserEntity(row)) : null;
+    }
 }
 
 module.exports = UserService;
