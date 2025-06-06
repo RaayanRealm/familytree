@@ -78,8 +78,8 @@ const LoginPage = ({ setUser }) => {
   return (
     <div className="login-bg-site">
       <div className="login-container-site">
-        <h1 className="login-title-site">{showCreate ? "Create Account" : "Sign in to Family Tree"}</h1>
-        <form className="login-form-site" onSubmit={showCreate ? handleCreate : handleLogin}>
+        <h1 className="login-title-site">Sign in to Family Tree</h1>
+        <form className="login-form-site" onSubmit={handleLogin}>
           <input
             className="login-input-site"
             type="text"
@@ -97,45 +97,20 @@ const LoginPage = ({ setUser }) => {
             onChange={e => setPassword(e.target.value)}
             required
           />
-          {showCreate && (
-            <>
-              <select
-                className="login-input-site"
-                value={role}
-                onChange={e => setRole(e.target.value)}
-                required
-              >
-                <option value="viewer">Viewer</option>
-                <option value="editor">Editor</option>
-                <option value="guest">Guest</option>
-                {/* Admin creation should be restricted in production */}
-              </select>
-              <input
-                className="login-input-site"
-                type="number"
-                placeholder="Member ID (for lineage access)"
-                value={memberId}
-                onChange={e => setMemberId(e.target.value)}
-                min={1}
-              />
-            </>
-          )}
           <button className="login-btn-site" type="submit" disabled={loading}>
-            {loading ? (showCreate ? "Creating..." : "Logging in...") : showCreate ? "Create Account" : "Login"}
+            {loading ? "Logging in..." : "Login"}
           </button>
           {error && <div className="login-error-site">{error}</div>}
           {successMsg && <div className="login-success-site">{successMsg}</div>}
         </form>
         <div className="login-footer-site">
-          {!showCreate ? (
-            <button className="create-account-link" onClick={() => { setShowCreate(true); setError(""); setSuccessMsg(""); }}>
-              Create Account
-            </button>
-          ) : (
-            <button className="create-account-link" onClick={() => { setShowCreate(false); setError(""); setSuccessMsg(""); }}>
-              Back to Sign In
-            </button>
-          )}
+          <button
+            className="create-account-link"
+            type="button"
+            onClick={() => navigate("/create-account")}
+          >
+            Create Account
+          </button>
         </div>
       </div>
     </div>

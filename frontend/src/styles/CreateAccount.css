@@ -1,0 +1,94 @@
+.create-account-bg {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.create-account-container {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+    padding: 2.5rem 2.5rem 2rem 2.5rem;
+    max-width: 350px;
+    width: 100%;
+    text-align: center;
+}
+
+.create-account-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #01a982;
+    margin-bottom: 1.5rem;
+    letter-spacing: 1px;
+}
+
+.create-account-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+
+.create-account-input {
+    padding: 0.8rem 1rem;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    font-size: 1rem;
+    outline: none;
+    transition: border 0.2s;
+}
+
+.create-account-input:focus {
+    border: 1.5px solid #01a982;
+}
+
+.create-account-btn {
+    background: linear-gradient(90deg, #6e8efb 0%, #01a982 100%);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.create-account-btn:hover {
+    background: linear-gradient(90deg, #01a982 0%, #6e8efb 100%);
+}
+
+.create-account-error {
+    color: #e74c3c;
+    margin-top: 0.5rem;
+    font-size: 0.98rem;
+}
+
+.create-account-success {
+    color: #01a982;
+    margin-top: 0.5rem;
+    font-size: 0.98rem;
+}
+
+.create-account-footer {
+    margin-top: 2rem;
+    color: #888;
+    font-size: 0.95rem;
+}
+
+.create-account-link {
+    background: none;
+    border: none;
+    color: #01a982;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+    margin-top: 0.5rem;
+    transition: color 0.18s;
+}
+
+.create-account-link:hover {
+    color: #01896d;
+}

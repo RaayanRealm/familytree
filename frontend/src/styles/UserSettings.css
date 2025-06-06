@@ -1,0 +1,72 @@
+.user-settings-bg {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.user-settings-container {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+    padding: 2.5rem 2.5rem 2rem 2.5rem;
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+}
+
+.user-settings-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #01a982;
+    margin-bottom: 1.5rem;
+    letter-spacing: 1px;
+}
+
+.user-settings-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+
+.user-settings-input {
+    padding: 0.8rem 1rem;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    font-size: 1rem;
+    outline: none;
+    transition: border 0.2s;
+}
+
+.user-settings-input:focus {
+    border: 1.5px solid #01a982;
+}
+
+.user-settings-btn {
+    background: linear-gradient(90deg, #6e8efb 0%, #01a982 100%);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.user-settings-btn:hover {
+    background: linear-gradient(90deg, #01a982 0%, #6e8efb 100%);
+}
+
+.user-settings-error {
+    color: #e74c3c;
+    margin-top: 0.5rem;
+    font-size: 0.98rem;
+}
+
+.user-settings-success {
+    color: #01a982;
+    margin-top: 0.5rem;
+    font-size: 0.98rem;
+}

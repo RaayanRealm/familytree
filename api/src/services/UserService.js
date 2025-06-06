@@ -1,20 +1,23 @@
 const bcrypt = require("bcryptjs");
+const UserEntity = require("../entities/UserEntity");
+const UserDTO = require("../dtos/UserDTO");
 
 class UserService {
     static async findByUsername(username, db) {
-        return db("users").where({ username }).first();
+        const row = await db("users").where({ username }).first();
+        return row ? new UserDTO(new UserEntity(row)) : null;
     }
 
     static async hashPassword(password) {
         return bcrypt.hash(password, 10);
     }
 
-    static async createUser({ username, password, role, member_id }, db) {
+    static async createUser({ username, password, role, member_id, name, email, phone, profile_picture }, db) {
         const password_hash = await this.hashPassword(password);
-        const [user] = await db("users")
-            .insert({ username, password_hash, role, member_id })
+        const [row] = await db("users")
+            .insert({ username, password_hash, role, member_id, name, email, phone, profile_picture })
             .returning("*");
-        return user;
+        return new UserDTO(new UserEntity(row));
     }
 
     static async updateUser(id, updates, db) {
@@ -22,20 +25,20 @@ class UserService {
             updates.password_hash = await this.hashPassword(updates.password);
             delete updates.password;
         }
-        const [user] = await db("users")
+        const [row] = await db("users")
             .where({ id })
             .update(updates)
             .returning("*");
-        return user;
+        return new UserDTO(new UserEntity(row));
     }
 
     static async deleteUser(id, db) {
-        const [user] = await db("users")
+        const [row] = await db("users")
             .where({ id })
             .del()
             .returning("*");
-        if (!user) throw new Error("User not found");
-        return user;
+        if (!row) throw new Error("User not found");
+        return new UserDTO(new UserEntity(row));
     }
 
     // Returns true if descendantId is a descendant of ancestorId (or same)
@@ -53,6 +56,11 @@ class UserService {
             currentId = parentRel.person_id;
         }
         return false;
+    }
+
+    static async getUserById(id, db) {
+        const row = await db("users").where({ id }).first();
+        return row ? new UserDTO(new UserEntity(row)) : null;
     }
 }
 
