@@ -201,7 +201,7 @@ const AddMember = () => {
     };
 
     return (
-        <div className="add-member-container">
+        <div className="add-member-container main-card">
             <h2>Add New Family Member</h2>
             <form className="add-member-form" onSubmit={handleSubmit}>
                 <div className="form-row">
@@ -376,7 +376,7 @@ const AddMember = () => {
                     </>
                 )}
                 {error && <div className="form-error">{error}</div>}
-                <button type="submit" className="submit-btn">Add Member</button>
+                <button type="submit" className="submit-btn main-btn">Add Member</button>
             </form>
         </div>
     );

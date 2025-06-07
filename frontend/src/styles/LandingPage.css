@@ -106,26 +106,47 @@
 .grid-layout {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
-    padding: 40px;
+    gap: 32px;
+    padding: 48px 32px 64px 32px;
+    margin: 0 auto;
+    max-width: auto;
 }
 
 .grid-item {
-    background-color: white;
-    padding: 20px;
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 4px 16px 0 rgba(255, 59, 63, 0.08);
+    padding: 2.2rem 1.5rem 2rem 1.5rem;
     text-align: center;
-    border-radius: 10px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #ff3b3f;
+    transition: box-shadow 0.18s, transform 0.18s, background 0.18s;
+    cursor: pointer;
+    border: 2px solid #ffe7e0;
+    min-height: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .grid-item a {
     text-decoration: none;
-    color: #01a982;
-    font-weight: bold;
+    color: #ff3b3f;
+    font-weight: 800;
+    font-size: 1.18rem;
+    letter-spacing: -0.5px;
+    transition: color 0.18s;
+    width: 100%;
+    display: block;
 }
 
+.grid-item:hover,
 .grid-item a:hover {
-    text-decoration: underline;
+    background: linear-gradient(90deg, #ffb347 0%, #ff3b3f 100%);
+    color: #fff !important;
+    box-shadow: 0 8px 32px 0 rgba(255, 59, 63, 0.13);
+    text-decoration: none;
 }
 
 .lemonade-landing-bg {
