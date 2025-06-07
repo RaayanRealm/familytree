@@ -16,13 +16,14 @@ const EditMember = () => {
     const [deathDate, setDeathDate] = useState(null);
     const [relationships, setRelationships] = useState([]);
     const [allMembers, setAllMembers] = useState([]);
+    const [relationshipDisplay, setRelationshipDisplay] = useState([]);
     const navigate = useNavigate();
 
     useEffect(() => {
+        // Fetch member details and fill relationships instantly with available info
         getFamilyMember(id).then(member => {
             setForm(member);
             setDob(member.dob ? new Date(member.dob) : null);
-            // Expect death as a single object, not array
             setDeath(
                 member.death
                     ? { hasDied: true, ...member.death }
@@ -30,17 +31,19 @@ const EditMember = () => {
             );
             setDeathDate(member.death && member.death.date ? new Date(member.death.date) : null);
 
-            // Autofill relationships from API if available
+            // Use relationships from the member object directly (no extra call)
             if (member.relationships && member.relationships.length > 0) {
                 setRelationships(member.relationships.map(rel => ({
-                    relative_id: rel.relative_id || rel.id, // support both API shapes
+                    relative_id: rel.relative_id || rel.id,
                     relationship_type: rel.relationship_type || rel.type
                 })));
             } else {
                 setRelationships([]);
             }
+
+            // Start fetching all members in the background (for async select)
+            getFamilyMembers().then(setAllMembers);
         });
-        getFamilyMembers().then(setAllMembers);
     }, [id]);
 
     if (!form) return <div>Loading...</div>;
@@ -159,7 +162,19 @@ const EditMember = () => {
             callback([]);
             return;
         }
-        const filtered = allMembers
+        // Use allMembers if loaded, otherwise fallback to relationships for initial display
+        let sourceMembers = allMembers.length > 0
+            ? allMembers
+            : relationships.map(rel => ({
+                id: rel.relative_id,
+                first_name: form.relationships?.find(r => (r.relative_id || r.id) === rel.relative_id)?.relative_name?.split(" ")[0] || "",
+                last_name: form.relationships?.find(r => (r.relative_id || r.id) === rel.relative_id)?.relative_name?.split(" ").slice(1).join(" ") || "",
+                occupation: "",
+                nickname: "",
+                current_location: ""
+            }));
+
+        const filtered = sourceMembers
             .filter(m =>
                 `${m.first_name} ${m.last_name}`.toLowerCase().includes(inputValue.toLowerCase())
             )
@@ -168,27 +183,32 @@ const EditMember = () => {
                 label: `${m.first_name} ${m.last_name}`
             }));
 
-        const nameCount = {};
-        filtered.forEach(opt => {
-            nameCount[opt.label] = (nameCount[opt.label] || 0) + 1;
-        });
+        // If allMembers is loaded, do the duplicate name logic
+        if (allMembers.length > 0) {
+            const nameCount = {};
+            filtered.forEach(opt => {
+                nameCount[opt.label] = (nameCount[opt.label] || 0) + 1;
+            });
 
-        const enhanced = filtered.map(opt => {
-            if (nameCount[opt.label] > 1) {
-                const member = allMembers.find(m => m.id === opt.value);
-                let extra = [];
-                if (member.occupation) extra.push(member.occupation);
-                if (member.nickname) extra.push(`"${member.nickname}"`);
-                if (member.current_location) extra.push(member.current_location);
-                return {
-                    ...opt,
-                    label: `${opt.label} (${extra.join(", ") || "ID: " + member.id})`
-                };
-            }
-            return opt;
-        });
+            const enhanced = filtered.map(opt => {
+                if (nameCount[opt.label] > 1) {
+                    const member = allMembers.find(m => m.id === opt.value);
+                    let extra = [];
+                    if (member.occupation) extra.push(member.occupation);
+                    if (member.nickname) extra.push(`"${member.nickname}"`);
+                    if (member.current_location) extra.push(member.current_location);
+                    return {
+                        ...opt,
+                        label: `${opt.label} (${extra.join(", ") || "ID: " + member.id})`
+                    };
+                }
+                return opt;
+            });
 
-        callback(enhanced);
+            callback(enhanced);
+        } else {
+            callback(filtered);
+        }
     };
 
     return (
@@ -294,9 +314,14 @@ const EditMember = () => {
                                         ? {
                                             value: rel.relative_id,
                                             label:
+                                                // Try to use allMembers if loaded, else fallback to relationship relative_name
                                                 allMembers.find(m => m.id === rel.relative_id)
                                                     ? `${allMembers.find(m => m.id === rel.relative_id).first_name} ${allMembers.find(m => m.id === rel.relative_id).last_name}`
-                                                    : ""
+                                                    : (
+                                                        form.relationships?.find(r => (r.relative_id || r.id) === rel.relative_id)?.relative_name ||
+                                                        form.relationships?.find(r => (r.relative_id || r.id) === rel.relative_id)?.name ||
+                                                        ""
+                                                    )
                                         }
                                         : null
                                 }
