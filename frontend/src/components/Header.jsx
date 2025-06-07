@@ -41,7 +41,7 @@ const Header = ({ user, setUser }) => {
             )
             .map(m => ({
                 value: m.id,
-                label: `${m.first_name} ${m.last_name}`
+                label: `${m.first_name} ${m.last_name}${m.current_location ? ` (${m.current_location})` : ""}`
             }));
         callback(filtered);
     };
@@ -82,7 +82,7 @@ const Header = ({ user, setUser }) => {
     const handleSearchChange = (e) => {
         const val = e.target.value;
         setSearchValue(val);
-        if (val.length > 1 && members.length > 0) {
+        if (val.length > 1) {
             setSearchResults(
                 members.filter(m =>
                     `${m.first_name} ${m.last_name}`.toLowerCase().includes(val.toLowerCase())
@@ -121,18 +121,18 @@ const Header = ({ user, setUser }) => {
     };
 
     return (
-        <header className="header">
+        <header className="header" style={{ zIndex: 3000 }}>
             <div className="logo-title">
                 <h1>
                     <span role="img" aria-label="tree" style={{ fontSize: "2.1rem", verticalAlign: "middle" }}>🌳</span>
                     Family Database
                 </h1>
             </div>
-            <nav className="header-nav">
+            <nav className="header-nav" style={{ zIndex: 3000 }}>
                 <ul>
                     <li><Link to="/" className="header-link">Home</Link></li>
                     {user && (user.role === "admin" || user.role === "editor") && (
-                        <li className="dropdown" ref={addMenuRef}>
+                        <li className="dropdown" ref={addMenuRef} style={{ zIndex: 3100 }}>
                             <span
                                 className="header-link"
                                 onClick={e => {
@@ -145,7 +145,7 @@ const Header = ({ user, setUser }) => {
                                 Add
                             </span>
                             {addMenuOpen && (
-                                <ul className="dropdown-menu" onMouseDown={e => e.stopPropagation()}>
+                                <ul className="dropdown-menu" onMouseDown={e => e.stopPropagation()} style={{ zIndex: 3200 }}>
                                     <li>
                                         <Link to="/add-member" className="add-member-header-btn" onClick={() => setAddMenuOpen(false)}>
                                             Add Member
@@ -156,9 +156,9 @@ const Header = ({ user, setUser }) => {
                                             Add Marriage
                                         </Link>
                                     </li>
-                                    <li style={{ minWidth: 220 }}>
+                                    <li style={{ minWidth: 220, zIndex: 3300 }}>
                                         {/* Edit Member modern search box */}
-                                        <div className="modern-search-box">
+                                        <div className="modern-search-box" style={{ zIndex: 3400 }}>
                                             <FaSearch className="modern-search-icon" />
                                             <input
                                                 type="text"
@@ -170,7 +170,7 @@ const Header = ({ user, setUser }) => {
                                                 style={{ paddingLeft: 36 }}
                                             />
                                             {editMemberResults.length > 0 && (
-                                                <div className="modern-search-dropdown">
+                                                <div className="modern-search-dropdown" style={{ zIndex: 3500 }}>
                                                     {editMemberResults.map(m => (
                                                         <div
                                                             key={m.id}
@@ -181,6 +181,9 @@ const Header = ({ user, setUser }) => {
                                                             }}
                                                         >
                                                             {m.first_name} {m.last_name}
+                                                            {m.current_location ? (
+                                                                <span style={{ color: "#888", fontSize: "0.7em" }}> ({m.current_location})</span>
+                                                            ) : null}
                                                         </div>
                                                     ))}
                                                 </div>
@@ -191,7 +194,7 @@ const Header = ({ user, setUser }) => {
                             )}
                         </li>
                     )}
-                    <li className="dropdown" ref={helpMenuRef}>
+                    <li className="dropdown" ref={helpMenuRef} style={{ zIndex: 3100 }}>
                         <span
                             className="header-link"
                             onClick={() => setHelpMenuOpen(open => !open)}
@@ -202,15 +205,15 @@ const Header = ({ user, setUser }) => {
                             Help
                         </span>
                         {helpMenuOpen && (
-                            <ul className="dropdown-menu">
+                            <ul className="dropdown-menu" style={{ zIndex: 3200 }}>
                                 <li><Link to="/help/faq" onClick={() => setHelpMenuOpen(false)}>FAQ</Link></li>
                                 <li><Link to="/help/contact" onClick={() => setHelpMenuOpen(false)}>Contact Us</Link></li>
                                 <li><Link to="/help/about" onClick={() => setHelpMenuOpen(false)}>About Family Tree</Link></li>
                             </ul>
                         )}
                     </li>
-                    <li style={{ position: "relative", minWidth: 220, marginLeft: "1.2rem" }}>
-                        <div className="modern-search-box">
+                    <li style={{ position: "relative", minWidth: 220, marginLeft: "1.2rem", zIndex: 3100 }}>
+                        <div className="modern-search-box" style={{ zIndex: 3200 }}>
                             <FaSearch className="modern-search-icon" />
                             <input
                                 type="text"
@@ -222,7 +225,7 @@ const Header = ({ user, setUser }) => {
                                 style={{ paddingLeft: 36 }}
                             />
                             {searchResults.length > 0 && (
-                                <div className="modern-search-dropdown">
+                                <div className="modern-search-dropdown" style={{ zIndex: 3500 }}>
                                     {searchResults.map(m => (
                                         <div
                                             key={m.id}
@@ -230,6 +233,9 @@ const Header = ({ user, setUser }) => {
                                             onMouseDown={() => handleSearchSelect(m.id)}
                                         >
                                             {m.first_name} {m.last_name}
+                                            {m.current_location ? (
+                                                <span style={{ color: "#888", fontSize: "0.98em" }}> ({m.current_location})</span>
+                                            ) : null}
                                         </div>
                                     ))}
                                 </div>
