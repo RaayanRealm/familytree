@@ -1,78 +1,185 @@
 .header {
-    background: #fff;
-    border-bottom: 1px solid #e5e7eb;
-    padding: 0.7rem 2rem;
+    background: linear-gradient(90deg, #fff7e6 60%, #ffe7e0 100%);
+    border-bottom: 1px solid #ffe7e0;
+    padding: 1.4rem 3.2rem 1.2rem 3.2rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
     color: #222;
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+    box-shadow: 0 2px 16px 0 rgba(255, 59, 63, 0.06);
 }
 
-.logo-title h1 {
-    font-size: 28px;
-    margin: 0;
-    color: #01a982;
-}
-
-nav ul {
-    list-style: none;
+.logo-title h1,
+.header-logo {
+    font-size: 2.1rem;
+    font-weight: 900;
+    color: #ff3b3f;
+    margin-right: 2.5rem;
+    text-decoration: none;
+    letter-spacing: -2px;
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+    background: linear-gradient(90deg, #ff3b3f 0%, #ffb347 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     display: flex;
-    gap: 20px;
     align-items: center;
+    gap: 0.6rem;
+}
+
+.header-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.header-nav ul {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    list-style: none;
     margin: 0;
     padding: 0;
 }
 
-nav ul li a,
-nav ul li span {
-    color: #01a982;
-    text-decoration: none;
-    font-size: 18px;
+.header-nav ul>li {
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+/* Modern search box styles */
+.modern-search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 2px 8px 0 rgba(255, 59, 63, 0.06);
+    border: 1.5px solid #ffb347;
+    padding: 0.1rem 0.7rem 0.1rem 0.7rem;
+    min-width: 200px;
+    max-width: 260px;
+    transition: border 0.18s;
+}
+
+.modern-search-box:focus-within {
+    border: 1.5px solid #ff3b3f;
+}
+
+.modern-search-icon {
+    color: #ffb347;
+    font-size: 1.2rem;
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.modern-search-input {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 1.08rem;
+    color: #222;
+    padding: 0.7rem 0.7rem 0.7rem 2.2rem;
+    border-radius: 18px;
+    width: 100%;
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+}
+
+.modern-search-dropdown {
+    position: absolute;
+    top: 110%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1.5px solid #ffb347;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px 0 rgba(255, 59, 63, 0.10);
+    z-index: 2000;
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+.modern-search-item {
+    padding: 0.7rem 1.2rem;
     cursor: pointer;
-    font-weight: 500;
-    transition: color 0.2s;
+    color: #ff3b3f;
+    font-size: 1.08rem;
+    font-weight: 600;
+    transition: background 0.18s, color 0.18s;
 }
 
-nav ul li a:hover,
-nav ul li span:hover {
-    color: #01896d;
+.modern-search-item:hover {
+    background: #fff7e6;
+    color: #ffb347;
 }
 
-.header-spacer {
-    flex: 1;
+.header-link,
+.dropdown>span {
+    margin-right: 1.2rem;
+    color: #ff3b3f;
+    text-decoration: none;
+    font-weight: 800;
+    font-size: 1.18rem;
+    letter-spacing: -0.5px;
+    border-radius: 18px;
+    padding: 0.5rem 1.2rem;
+    background: transparent;
+    transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+    box-shadow: 0 2px 8px 0 rgba(255, 59, 63, 0.03);
+    cursor: pointer;
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+    display: flex;
+    align-items: center;
+}
+
+.header-link:hover,
+.dropdown>span:hover,
+.dropdown-menu a:hover,
+.dropdown-menu a:focus {
+    color: #fff;
+    background: linear-gradient(90deg, #ff3b3f 0%, #ffb347 100%);
+    box-shadow: 0 4px 16px 0 rgba(255, 59, 63, 0.10);
 }
 
 /* Sign In/Logout Button */
 .header-login-btn,
 .header-logout-btn {
-    background: linear-gradient(90deg, #6e8efb 0%, #01a982 100%);
+    background: linear-gradient(90deg, #ff3b3f 0%, #ffb347 100%);
     color: #fff;
     border: none;
-    border-radius: 8px;
-    padding: 0.5rem 1.2rem;
+    border-radius: 24px;
+    padding: 0.7rem 1.6rem;
     font-size: 1.08rem;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
     margin-left: 1rem;
     transition: background 0.2s, color 0.2s;
-    box-shadow: 0 2px 8px rgba(1, 169, 130, 0.08);
+    box-shadow: 0 2px 8px rgba(255, 59, 63, 0.08);
     letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
 }
 
 .header-login-btn:hover,
 .header-logout-btn:hover {
-    background: linear-gradient(90deg, #01a982 0%, #6e8efb 100%);
+    background: linear-gradient(90deg, #ffb347 0%, #ff3b3f 100%);
     color: #fff;
 }
 
 .add-member-header-btn {
-    background: #01a982;
+    background: #ff3b3f;
     color: #fff;
     border: none;
-    border-radius: 7px;
-    font-weight: 600;
+    border-radius: 18px;
+    font-weight: 700;
     font-size: 1rem;
-    padding: 0.4rem 1.1rem;
+    padding: 0.5rem 1.2rem;
     margin: 0 0.5rem 0 0;
     cursor: pointer;
     text-decoration: none;
@@ -84,21 +191,24 @@ nav ul li span:hover {
 }
 
 .add-member-header-btn:hover {
-    background: #01896d;
+    background: #ffb347;
+    color: #fff;
 }
 
 /* Dropdown styles (Help, etc) */
 .dropdown-menu {
     display: none;
     position: absolute;
-    background-color: #f7faf9;
+    background-color: #fff;
     padding: 8px 0;
-    border-radius: 6px;
+    border-radius: 16px;
     z-index: 1500;
-    box-shadow: 0 2px 10px rgba(1, 169, 130, 0.13);
+    box-shadow: 0 2px 10px rgba(255, 59, 63, 0.13);
     min-width: 180px;
-    max-width: 240px;
-    border: 1px solid #01a982;
+    max-width: 260px;
+    border: 1px solid #ffb347;
+    top: 100%;
+    left: 0;
 }
 
 .dropdown:hover .dropdown-menu,
@@ -119,10 +229,10 @@ nav ul li span:hover {
     display: block;
     width: 100%;
     background: none;
-    color: #01a982;
+    color: #ff3b3f;
     border: none;
-    border-radius: 4px;
-    font-weight: 600;
+    border-radius: 12px;
+    font-weight: 700;
     font-size: 1rem;
     padding: 0.6rem 1rem;
     margin: 0;
@@ -142,17 +252,17 @@ nav ul li span:hover {
 
 .dropdown-menu a.add-member-header-btn:hover,
 .dropdown-menu a.add-member-header-btn:focus {
-    background: #e6f7f3;
-    color: #01896d;
+    background: #fff7e6;
+    color: #ffb347;
 }
 
 .dropdown-menu a,
 .dropdown-menu span {
-    color: #01a982 !important;
+    color: #ff3b3f !important;
     background: none !important;
     font-size: 1rem;
-    font-weight: 600;
-    border-radius: 4px;
+    font-weight: 700;
+    border-radius: 12px;
     padding: 0.6rem 1rem;
     display: block;
     text-align: left;
@@ -180,7 +290,8 @@ nav ul li.dropdown {
 
 .header-profile-menu {
     position: relative;
-    display: inline-block;
+    display: flex;
+    align-items: center;
 }
 
 .header-profile-btn {
@@ -194,11 +305,14 @@ nav ul li.dropdown {
     width: 40px;
     height: 40px;
     transition: box-shadow 0.18s;
-    box-shadow: 0 2px 8px rgba(1, 169, 130, 0.08);
+    box-shadow: 0 2px 8px rgba(255, 59, 63, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .header-profile-btn:focus {
-    outline: 2px solid #01a982;
+    outline: 2px solid #ffb347;
 }
 
 .header-profile-pic {
@@ -242,7 +356,7 @@ nav ul li.dropdown {
 
 .header-profile-username {
     font-weight: 700;
-    color: #01a982;
+    color: #ff3b3f;
     font-size: 1.1rem;
 }
 
@@ -253,13 +367,13 @@ nav ul li.dropdown {
 }
 
 .header-profile-settings-btn {
-    background: #01a982;
+    background: #ff3b3f;
     color: #fff;
     border: none;
-    border-radius: 7px;
-    font-weight: 600;
+    border-radius: 18px;
+    font-weight: 700;
     font-size: 1rem;
-    padding: 0.4rem 1.1rem;
+    padding: 0.5rem 1.2rem;
     margin-bottom: 0.7rem;
     cursor: pointer;
     text-decoration: none;
@@ -268,5 +382,11 @@ nav ul li.dropdown {
 }
 
 .header-profile-settings-btn:hover {
-    background: #01896d;
+    background: #ffb347;
+    color: #fff;
+}
+
+.header-spacer {
+    flex: 1;
+    min-width: 20px;
 }

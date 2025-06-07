@@ -8,20 +8,20 @@
 
 .user-settings-container {
     background: #fff;
-    border-radius: 16px;
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+    border-radius: 18px;
+    box-shadow: 0 8px 32px 0 rgba(255, 59, 63, 0.10);
     padding: 2.5rem 2.5rem 2rem 2.5rem;
-    max-width: 400px;
+    max-width: 420px;
     width: 100%;
     text-align: center;
 }
 
 .user-settings-title {
-    font-size: 2rem;
-    font-weight: 700;
-    color: #01a982;
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #ff3b3f;
     margin-bottom: 1.5rem;
-    letter-spacing: 1px;
+    letter-spacing: -1px;
 }
 
 .user-settings-form {
@@ -40,23 +40,23 @@
 }
 
 .user-settings-input:focus {
-    border: 1.5px solid #01a982;
+    border: 1.5px solid #ff3b3f;
 }
 
 .user-settings-btn {
-    background: linear-gradient(90deg, #6e8efb 0%, #01a982 100%);
+    background: linear-gradient(90deg, #ff3b3f 0%, #ffb347 100%);
     color: #fff;
     border: none;
     border-radius: 8px;
     padding: 0.8rem 1rem;
     font-size: 1.1rem;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
     transition: background 0.2s;
 }
 
 .user-settings-btn:hover {
-    background: linear-gradient(90deg, #01a982 0%, #6e8efb 100%);
+    background: linear-gradient(90deg, #ffb347 0%, #ff3b3f 100%);
 }
 
 .user-settings-error {
@@ -66,7 +66,7 @@
 }
 
 .user-settings-success {
-    color: #01a982;
+    color: #ff3b3f;
     margin-top: 0.5rem;
     font-size: 0.98rem;
 }
@@ -102,25 +102,17 @@
 
 .user-settings-role-assign label {
     font-weight: 500;
-    color: #01a982;
+    color: #ff3b3f;
 }
 
 .user-settings-role-assign select,
 .user-settings-role-assign input[type="text"] {
-    margin-left: 0.5rem;
-    margin-bottom: 0.5rem;
-    min-width: 140px;
-    padding: 0.6rem 0.7rem;
-    border-radius: 7px;
-    border: 1px solid #d1d5db;
-    font-size: 1rem;
-    background: #fff;
-    transition: border 0.2s;
+    border: 1px solid #ffb347;
 }
 
 .user-settings-role-assign input[type="text"]:focus,
 .user-settings-role-assign select:focus {
-    border: 1.5px solid #01a982;
+    border: 1.5px solid #ff3b3f;
 }
 
 .user-settings-role-assign .user-settings-btn {
@@ -143,13 +135,13 @@
 .user-settings-search-item {
     padding: 0.6rem 1rem;
     cursor: pointer;
-    color: #01a982;
+    color: #ff3b3f;
     font-size: 1rem;
     transition: background 0.18s, color 0.18s;
 }
 
-.user-settings-search-item:hover,
-.user-settings-search-item.selected {
-    background: #e6f7f3;
-    color: #01896d;
+.user-settings-search-item.selected,
+.user-settings-search-item:hover {
+    background: #fff7e6;
+    color: #ffb347;
 }

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import RecentMembersCarousel from "../components/RecentMembersCarousel";
 import { getRecentMembers } from "../services/api";
-import "../styles/LandingPage.css";
+import "./../styles/LandingPage.css";
 
 const LandingPage = () => {
     const [recentMembers, setRecentMembers] = useState([]);
@@ -11,12 +11,24 @@ const LandingPage = () => {
     }, []);
 
     return (
-        <div className="landing-page">
-            {/* ✅ Hero Section */}
-            <section className="hero-section">
-                <h1>Welcome to Your Family Tree</h1>
-                <p>Discover your roots and explore family connections.</p>
-            </section>
+        <div className="lemonade-landing-bg">
+            <div className="lemonade-hero">
+                <div className="lemonade-hero-content">
+                    <h1 className="lemonade-hero-title">Welcome to Family Tree</h1>
+                    <p className="lemonade-hero-desc">
+                        Discover, connect, and celebrate your family story with a fresh, modern experience.
+                    </p>
+                    <button className="lemonade-hero-btn" onClick={() => window.location.href = "/add-member"}>
+                        Get Started
+                    </button>
+                </div>
+                <div className="lemonade-hero-carousel">
+                    {/* Replace with your carousel component, but make it bigger */}
+                    <div className="lemonade-carousel-big">
+                        {/* ...your carousel images/components here... */}
+                    </div>
+                </div>
+            </div>
 
             {/* ✅ Recent Members Carousel */}
             <section className="carousel-container">

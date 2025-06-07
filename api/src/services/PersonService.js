@@ -23,10 +23,10 @@ class PersonService {
         const results = [];
         for (const row of rows) {
             const entity = new PersonEntity(row);
-            const deaths = await this.getDeathsForPerson(entity.id, db);
+            const death = await this.getDeathForPerson(entity.id, db);
             const marriages = await this.getMarriagesForPerson(entity.id, db);
             const relationships = await this.getRelationshipsForPerson(entity.id, db);
-            results.push(new PersonDTO(entity, deaths, marriages, relationships));
+            results.push(new PersonDTO(entity, death, marriages, relationships));
         }
         this.info("getAllPersons returning", results.length, "members");
         return results;
@@ -49,11 +49,11 @@ class PersonService {
             return null;
         }
         const entity = new PersonEntity(row);
-        const deaths = await this.getDeathsForPerson(id, db);
+        const death = await this.getDeathForPerson(id, db);
         const marriages = await this.getMarriagesForPerson(id, db);
         const relationships = await this.getRelationshipsForPerson(id, db);
         this.info("getPersonById returning member:", id);
-        return new PersonDTO(entity, deaths, marriages, relationships);
+        return new PersonDTO(entity, death, marriages, relationships);
     }
 
     static async deletePerson(id, db) {
@@ -62,10 +62,17 @@ class PersonService {
         return true;
     }
 
-    static async getDeathsForPerson(personId, db) {
-        this.debug("getDeathsForPerson called for personId:", personId);
+    static async getDeathForPerson(personId, db) {
+        this.debug("getDeathForPerson called for personId:", personId);
         const rows = await db("deaths").where({ person_id: personId }).select("*");
-        return rows.map(row => new DeathDTO(new DeathEntity(row)));
+        if (rows.length === 0) {
+            this.debug("getDeathForPerson: no death record found for personId", personId);
+            return null;
+        }
+        this.debug("getDeathForPerson found", rows.length, "death records for personId", personId);
+        // Assuming there is only one death record per person
+        const deathEntity = new DeathEntity(rows[0]);
+        return new DeathDTO(deathEntity);
     }
 
     static async getMarriagesForPerson(personId, db) {
@@ -99,8 +106,30 @@ class PersonService {
         this.info("createPersonWithMedia called");
         const trx = await db.transaction();
         try {
-            let { deaths, relationships, first_name, last_name, profile_picture, ...personFields } = personData;
-            // Insert person
+            // Extract DTO-only fields and remove them from personFields
+            let {
+                death,
+                marriages,
+                relationships,
+                first_name,
+                last_name,
+                profile_picture,
+                ...personFields
+            } = personData;
+
+            // Remove DTO-only fields if present in personFields (defensive)
+            delete personFields.marriages;
+            delete personFields.death;
+            delete personFields.relationships;
+
+            // Insert person (let DB auto-increment id)
+            const personEntity = new PersonEntity({
+                ...personFields,
+                first_name,
+                last_name
+            });
+
+            this.debug("Inserting person with fields:", personEntity);
             const [person] = await trx("persons").insert({
                 ...personFields,
                 first_name,
@@ -113,16 +142,56 @@ class PersonService {
                 personId, first_name, last_name, profile_picture, file, trx, ...helpers
             });
 
-            // Insert deaths
-            if (Array.isArray(deaths) && deaths.length > 0) {
-                for (const death of deaths) {
-                    await trx("deaths").insert({
+            // Insert death
+            if (death) {
+                await trx("deaths").insert({
+                    person_id: personId,
+                    date: death.date || null,
+                    cause: death.cause || null,
+                    place: death.place || null,
+                    obituary: death.obituary || null
+                });
+            } else {
+                // If death is not provided or hasDied is false, ensure no death record exists
+                await trx("deaths").where({ person_id: personId }).del();
+            }
+            this.debug("Death record inserted for personId:", personId);
+
+
+            // If no marriages provided, ensure no marriage records exist
+            if (!Array.isArray(marriages) || marriages.length === 0) {
+                await trx("marriages").where({ person_id: personId }).del();
+            } else {
+                for (const marriage of marriages) {
+                    // extract Marriage DTO to entity
+                    const marriageEntity = new MarriageEntity({
                         person_id: personId,
-                        date: death.date || null,
-                        cause: death.cause || null,
-                        place: death.place || null,
-                        obituary: death.obituary || null
+                        spouse_id: marriage.spouse_id,
+                        marriage_date: marriage.marriage_date || null,
+                        divorce_date: marriage.divorce_date || null
                     });
+                    // Insert marriage record
+                    try {
+                        await trx("marriages").insert({
+                            person_id: marriageEntity.person_id,
+                            spouse_id: marriageEntity.spouse_id,
+                            marriage_date: marriageEntity.marriage_date,
+                            divorce_date: marriageEntity.divorce_date
+                        }).onConflict(["person_id", "spouse_id"]).ignore();
+                    } catch (e) {
+                        this.debug("Duplicate marriage skipped:", marriageEntity.person_id, marriageEntity.spouse_id);
+                    }
+                    // Insert reverse marriage for spouse
+                    try {
+                        await trx("marriages").insert({
+                            person_id: marriageEntity.spouse_id,
+                            spouse_id: marriageEntity.person_id,
+                            marriage_date: marriageEntity.marriage_date,
+                            divorce_date: marriageEntity.divorce_date
+                        }).onConflict(["person_id", "spouse_id"]).ignore();
+                    } catch (e) {
+                        this.debug("Duplicate reverse marriage skipped:", marriageEntity.spouse_id, marriageEntity.person_id);
+                    }
                 }
             }
 
@@ -217,7 +286,7 @@ class PersonService {
         this.info("updatePersonWithMedia called for id:", personId);
         const trx = await db.transaction();
         try {
-            let { deaths, relationships, first_name, last_name, profile_picture, ...personFields } = personData;
+            let { death, relationships, first_name, last_name, profile_picture, ...personFields } = personData;
             await trx("persons").where({ id: personId }).update({
                 ...personFields,
                 first_name,
@@ -229,18 +298,17 @@ class PersonService {
                 personId, first_name, last_name, profile_picture, file, trx, ...helpers
             });
 
-            // Remove old deaths and insert new ones
+            // Remove old death and insert new ones
+            this.debug("Updating deaths for personId:", personId);
             await trx("deaths").where({ person_id: personId }).del();
-            if (Array.isArray(deaths) && deaths.length > 0) {
-                for (const death of deaths) {
-                    await trx("deaths").insert({
-                        person_id: personId,
-                        date: death.date || null,
-                        cause: death.cause || null,
-                        place: death.place || null,
-                        obituary: death.obituary || null
-                    });
-                }
+            if (death) {
+                await trx("deaths").insert({
+                    person_id: personId,
+                    date: death.date || null,
+                    cause: death.cause || null,
+                    place: death.place || null,
+                    obituary: death.obituary || null
+                });
             }
 
             // --- Relationship update logic with spouse-child sync ---

@@ -81,7 +81,7 @@ const MemberProfile = () => {
           <p>
             <span className="profile-label">Birth Date:</span> <span className="profile-value">{formatDate(member.dob)}
               {member.dob && (
-                <> ({getAge(member.dob, member.deaths && member.deaths[0]?.death_date)} years)</>
+                <> ({getAge(member.dob, member.death && member.death.date)} years)</>
               )}</span>
           </p>
           <p><span className="profile-label">Place of Birth:</span> <span className="profile-value">{member.place_of_birth}</span></p>
@@ -129,13 +129,9 @@ const MemberProfile = () => {
         <h3>Relations</h3>
         <ul>
           {relations.map((relative, index) => {
-            // Correct relationship display for Grandparent/Grandchild
             let relType = relative.type;
             if (relType === "Grandparent" || relType === "Grandchild") {
-              // If the current member is the grandchild, show "Grandparent"
-              // If the current member is the grandparent, show "Grandchild"
               if (String(relative.id) === String(id)) {
-                // This should never happen, but just in case
                 relType = relative.type;
               } else if (relType === "Grandparent") {
                 relType = "Grandchild";
@@ -156,22 +152,20 @@ const MemberProfile = () => {
         </ul>
       </div>
 
-      {member.deaths && member.deaths.length > 0 && (
+      {member.death && (
         <div className="death-info">
           <h3>Death Information</h3>
-          {member.deaths.map((death, idx) => (
-            <div key={idx}>
-              <p>
-                <strong>Date of Death:</strong> {formatDate(death.date)}
-                {death.date && (
-                  <> ({yearsPassed(death.date)} years ago)</>
-                )}
-              </p>
-              <p><strong>Cause of Death:</strong> {death.cause}</p>
-              <p><strong>Burial Place:</strong> {death.place}</p>
-              <p><strong>Obituary:</strong> {death.obituary}</p>
-            </div>
-          ))}
+          <div>
+            <p>
+              <strong>Date of Death:</strong> {formatDate(member.death.date)}
+              {member.death.date && (
+                <> ({yearsPassed(member.death.date)} years ago)</>
+              )}
+            </p>
+            <p><strong>Cause of Death:</strong> {member.death.cause}</p>
+            <p><strong>Burial Place:</strong> {member.death.place}</p>
+            <p><strong>Obituary:</strong> {member.death.obituary}</p>
+          </div>
         </div>
       )}
     </div>

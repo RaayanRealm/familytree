@@ -141,12 +141,12 @@ const AddMember = () => {
         // Prepare payload
         const payload = {
             ...form,
-            deaths: death.hasDied && death.date ? [{
+            death: death.hasDied && death.date ? {
                 date: death.date,
                 cause: death.cause,
                 place: death.place,
                 obituary: death.obituary
-            }] : [],
+            } : {},
             relationships: relationships.filter(r => r.relative_id && r.relationship_type)
         };
         try {

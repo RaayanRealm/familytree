@@ -8,11 +8,13 @@
 .hero-section {
     text-align: center;
     padding: 5px;
-    background-color: #01a982;
+    background-color: #ff3b3f;
+    /* changed from #01a982 to lemonade pink */
     color: white;
-    border-radius: 10px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-    margin: 20px 0;
+    border-radius: 18px;
+    box-shadow: 0px 8px 32px rgba(255, 59, 63, 0.10);
+    margin: 32px 0;
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
 }
 
 .hero-section h1 {
@@ -76,19 +78,26 @@
 }
 
 .carousel-info .bio {
-    font-size: 14px;
-    color: #555;
-    max-width: 250px;
-    margin-top: 5px;
-    transition: opacity 0.3s ease-in-out;
+    font-size: 1.15rem;
+    color: #444;
+    max-width: 340px;
+    margin-top: 8px;
+    opacity: 0.92;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: normal;
-    min-height: 2.8em;
-    /* keeps height consistent for 2 lines */
+    min-height: 3.5em;
+}
+
+.carousel-info .meta {
+    color: #ffb347;
+    font-size: 1rem;
+    margin-top: 0.5rem;
+    font-weight: 600;
+    letter-spacing: 0.2px;
 }
 
 
@@ -117,4 +126,75 @@
 
 .grid-item a:hover {
     text-decoration: underline;
+}
+
+.lemonade-landing-bg {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #fff7e6 0%, #ffe7e0 100%);
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+}
+
+.lemonade-hero {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem 2rem 2rem;
+    gap: 3rem;
+    background: linear-gradient(90deg, #fff7e6 60%, #ffe7e0 100%);
+}
+
+.lemonade-hero-content {
+    max-width: 480px;
+}
+
+.lemonade-hero-title {
+    font-size: 3.2rem;
+    font-weight: 800;
+    color: #ff3b3f;
+    margin-bottom: 1.2rem;
+    letter-spacing: -1px;
+}
+
+.lemonade-hero-desc {
+    font-size: 1.35rem;
+    color: #222;
+    margin-bottom: 2.2rem;
+    line-height: 1.5;
+}
+
+.lemonade-hero-btn {
+    background: linear-gradient(90deg, #ff3b3f 0%, #ffb347 100%);
+    color: #fff;
+    border: none;
+    border-radius: 32px;
+    padding: 1.1rem 2.5rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 24px 0 rgba(255, 59, 63, 0.13);
+    transition: background 0.2s, box-shadow 0.2s;
+}
+
+.lemonade-hero-btn:hover {
+    background: linear-gradient(90deg, #ffb347 0%, #ff3b3f 100%);
+    box-shadow: 0 6px 32px 0 rgba(255, 59, 63, 0.18);
+}
+
+.lemonade-hero-carousel {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lemonade-carousel-big {
+    width: 540px;
+    height: 340px;
+    background: #fff;
+    border-radius: 32px;
+    box-shadow: 0 8px 32px 0 rgba(255, 59, 63, 0.10);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
 }

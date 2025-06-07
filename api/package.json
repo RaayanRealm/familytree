@@ -23,5 +23,9 @@
     "knex": "^3.1.0",
     "multer": "^2.0.0",
     "pg": "^8.16.0"
+  },
+  "devDependencies": {
+    "mocha": "^11.5.0",
+    "supertest": "^7.1.1"
   }
 }

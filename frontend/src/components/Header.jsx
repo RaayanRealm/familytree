@@ -4,6 +4,7 @@ import "./../styles/Header.css";
 import Search from "./Search";
 import { getFamilyMembers } from "../services/api";
 import AsyncSelect from "react-select/async";
+import { FaSearch } from "react-icons/fa";
 
 const Header = ({ user, setUser }) => {
     const navigate = useNavigate();
@@ -12,9 +13,20 @@ const Header = ({ user, setUser }) => {
 
     const [members, setMembers] = useState([]);
     const [editMemberId, setEditMemberId] = useState("");
+    const [addMenuOpen, setAddMenuOpen] = useState(false);
+    const [helpMenuOpen, setHelpMenuOpen] = useState(false);
+    const addMenuRef = useRef();
+    const helpMenuRef = useRef();
+    const [searchValue, setSearchValue] = useState("");
+    const [searchResults, setSearchResults] = useState([]);
+    const [editMemberSearch, setEditMemberSearch] = useState("");
+    const [editMemberResults, setEditMemberResults] = useState([]);
 
     useEffect(() => {
-        getFamilyMembers().then(setMembers); // ✅ Fetch all members for search
+        getFamilyMembers().then(data => {
+            setMembers(data);
+            console.log('Loaded members:', data); // Debug: ensure members are loaded
+        });
     }, []);
 
     // For react-select async search
@@ -47,104 +59,183 @@ const Header = ({ user, setUser }) => {
         setMenuOpen(open => !open);
     };
 
-    // Close menu on outside click
+    // Close menus on outside click
     useEffect(() => {
         function handleClickOutside(event) {
             if (menuRef.current && !menuRef.current.contains(event.target)) {
                 setMenuOpen(false);
             }
+            if (addMenuRef.current && !addMenuRef.current.contains(event.target)) {
+                setAddMenuOpen(false);
+            }
+            if (helpMenuRef.current && !helpMenuRef.current.contains(event.target)) {
+                setHelpMenuOpen(false);
+            }
         }
-        if (menuOpen) {
+        if (menuOpen || addMenuOpen || helpMenuOpen) {
             document.addEventListener("mousedown", handleClickOutside);
         }
         return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, [menuOpen]);
+    }, [menuOpen, addMenuOpen, helpMenuOpen]);
 
+    // Modern search box logic
+    const handleSearchChange = (e) => {
+        const val = e.target.value;
+        setSearchValue(val);
+        if (val.length > 1 && members.length > 0) {
+            setSearchResults(
+                members.filter(m =>
+                    `${m.first_name} ${m.last_name}`.toLowerCase().includes(val.toLowerCase())
+                ).slice(0, 7)
+            );
+        } else {
+            setSearchResults([]);
+        }
+    };
+
+    const handleSearchSelect = (memberId) => {
+        setSearchValue("");
+        setSearchResults([]);
+        navigate(`/member/${memberId}`);
+    };
+
+    // Edit member search logic
+    const handleEditMemberSearchChange = (e) => {
+        const val = e.target.value;
+        setEditMemberSearch(val);
+        if (val.length > 1 && members.length > 0) {
+            setEditMemberResults(
+                members.filter(m =>
+                    `${m.first_name} ${m.last_name}`.toLowerCase().includes(val.toLowerCase())
+                ).slice(0, 7)
+            );
+        } else {
+            setEditMemberResults([]);
+        }
+    };
+
+    const handleEditMemberSelect = (memberId) => {
+        setEditMemberSearch("");
+        setEditMemberResults([]);
+        navigate(`/edit-member/${memberId}`);
+    };
 
     return (
         <header className="header">
             <div className="logo-title">
-                <h1>🌳 Family Database</h1>
+                <h1>
+                    <span role="img" aria-label="tree" style={{ fontSize: "2.1rem", verticalAlign: "middle" }}>🌳</span>
+                    Family Database
+                </h1>
             </div>
-            <nav>
+            <nav className="header-nav">
                 <ul>
-                    <li><Link to="/">Home</Link></li>
+                    <li><Link to="/" className="header-link">Home</Link></li>
                     {user && (user.role === "admin" || user.role === "editor") && (
-                        <li className="dropdown">
-                            <span>Add</span>
-                            <ul className="dropdown-menu">
-                                <li>
-                                    <Link to="/add-member" className="add-member-header-btn">
-                                        Add Member
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link to="/add-marriage" className="add-member-header-btn">
-                                        Add Marriage
-                                    </Link>
-                                </li>
-                                <li style={{ minWidth: 220 }}>
-                                    <AsyncSelect
-                                        cacheOptions
-                                        loadOptions={loadMemberOptions}
-                                        defaultOptions={members.slice(0, 10).map(m => ({
-                                            value: m.id,
-                                            label: `${m.first_name} ${m.last_name}`
-                                        }))}
-                                        onChange={option => {
-                                            if (option && option.value) {
-                                                window.location.href = `/edit-member/${option.value}`;
-                                            }
-                                        }}
-                                        placeholder="Edit Member..."
-                                        classNamePrefix="relation-async-select"
-                                        isClearable
-                                        styles={{
-                                            container: base => ({
-                                                ...base,
-                                                minWidth: 180,
-                                                maxWidth: 260,
-                                                margin: "0.2rem 0",
-                                                zIndex: 1200, // ensure above content
-                                            }),
-                                            control: base => ({
-                                                ...base,
-                                                background: "#f8fafc", // light background for input
-                                                color: "#222",
-                                                borderColor: "#01a982",
-                                                minHeight: 36,
-                                                boxShadow: "none"
-                                            }),
-                                            menu: base => ({
-                                                ...base,
-                                                zIndex: 2000, // ensure above dialogs/pages
-                                                background: "#fff",
-                                                color: "#222",
-                                                border: "1px solid #01a982"
-                                            }),
-                                            option: base => ({
-                                                ...base,
-                                                color: "#222",
-                                                background: "#fff",
-                                                "&:hover": {
-                                                    background: "#e6f7f3"
-                                                }
-                                            })
-                                        }}
-                                    />
-                                </li>
-                            </ul>
+                        <li className="dropdown" ref={addMenuRef}>
+                            <span
+                                className="header-link"
+                                onClick={e => {
+                                    e.stopPropagation();
+                                    setAddMenuOpen(open => !open);
+                                }}
+                                tabIndex={0}
+                                style={{ userSelect: "none" }}
+                            >
+                                Add
+                            </span>
+                            {addMenuOpen && (
+                                <ul className="dropdown-menu" onMouseDown={e => e.stopPropagation()}>
+                                    <li>
+                                        <Link to="/add-member" className="add-member-header-btn" onClick={() => setAddMenuOpen(false)}>
+                                            Add Member
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link to="/add-marriage" className="add-member-header-btn" onClick={() => setAddMenuOpen(false)}>
+                                            Add Marriage
+                                        </Link>
+                                    </li>
+                                    <li style={{ minWidth: 220 }}>
+                                        {/* Edit Member modern search box */}
+                                        <div className="modern-search-box">
+                                            <FaSearch className="modern-search-icon" />
+                                            <input
+                                                type="text"
+                                                className="modern-search-input"
+                                                placeholder="Edit member..."
+                                                value={editMemberSearch}
+                                                onChange={handleEditMemberSearchChange}
+                                                autoComplete="off"
+                                                style={{ paddingLeft: 36 }}
+                                            />
+                                            {editMemberResults.length > 0 && (
+                                                <div className="modern-search-dropdown">
+                                                    {editMemberResults.map(m => (
+                                                        <div
+                                                            key={m.id}
+                                                            className="modern-search-item"
+                                                            onMouseDown={() => {
+                                                                handleEditMemberSelect(m.id);
+                                                                setAddMenuOpen(false);
+                                                            }}
+                                                        >
+                                                            {m.first_name} {m.last_name}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </li>
+                                </ul>
+                            )}
                         </li>
                     )}
-                    <li className="dropdown">
-                        <span>Help</span>
-                        <ul className="dropdown-menu">
-                            <li><Link to="/help/faq">FAQ</Link></li>
-                            <li><Link to="/help/contact">Contact Us</Link></li>
-                            <li><Link to="/help/about">About Family Tree</Link></li>
-                        </ul>
+                    <li className="dropdown" ref={helpMenuRef}>
+                        <span
+                            className="header-link"
+                            onClick={() => setHelpMenuOpen(open => !open)}
+                            tabIndex={0}
+                            onBlur={() => setTimeout(() => setHelpMenuOpen(false), 150)}
+                            style={{ userSelect: "none" }}
+                        >
+                            Help
+                        </span>
+                        {helpMenuOpen && (
+                            <ul className="dropdown-menu">
+                                <li><Link to="/help/faq" onClick={() => setHelpMenuOpen(false)}>FAQ</Link></li>
+                                <li><Link to="/help/contact" onClick={() => setHelpMenuOpen(false)}>Contact Us</Link></li>
+                                <li><Link to="/help/about" onClick={() => setHelpMenuOpen(false)}>About Family Tree</Link></li>
+                            </ul>
+                        )}
                     </li>
-                    <Search members={members} />
+                    <li style={{ position: "relative", minWidth: 220, marginLeft: "1.2rem" }}>
+                        <div className="modern-search-box">
+                            <FaSearch className="modern-search-icon" />
+                            <input
+                                type="text"
+                                className="modern-search-input"
+                                placeholder="Search members..."
+                                value={searchValue}
+                                onChange={handleSearchChange}
+                                autoComplete="off"
+                                style={{ paddingLeft: 36 }}
+                            />
+                            {searchResults.length > 0 && (
+                                <div className="modern-search-dropdown">
+                                    {searchResults.map(m => (
+                                        <div
+                                            key={m.id}
+                                            className="modern-search-item"
+                                            onMouseDown={() => handleSearchSelect(m.id)}
+                                        >
+                                            {m.first_name} {m.last_name}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </li>
                     <li>
                         <span className="header-spacer" />
                         {!user ? (

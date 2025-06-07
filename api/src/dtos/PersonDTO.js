@@ -1,5 +1,5 @@
 class PersonDTO {
-    constructor(entity, deaths = [], marriages = [], relationships = []) {
+    constructor(entity, death, marriages = [], relationships = []) {
         this.id = entity.id;
         this.first_name = entity.first_name;
         this.last_name = entity.last_name;
@@ -17,7 +17,7 @@ class PersonDTO {
         this.social_media = entity.social_media;
         this.created_at = entity.created_at;
         this.updated_at = entity.updated_at;
-        this.deaths = deaths;
+        this.death = death;
         this.marriages = marriages;
         this.relationships = relationships;
     }

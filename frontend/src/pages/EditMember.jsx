@@ -22,11 +22,13 @@ const EditMember = () => {
         getFamilyMember(id).then(member => {
             setForm(member);
             setDob(member.dob ? new Date(member.dob) : null);
-            setDeath(member.deaths && member.deaths.length > 0
-                ? { hasDied: true, ...member.deaths[0] }
-                : { hasDied: false, date: "", cause: "", place: "", obituary: "" }
+            // Expect death as a single object, not array
+            setDeath(
+                member.death
+                    ? { hasDied: true, ...member.death }
+                    : { hasDied: false, date: "", cause: "", place: "", obituary: "" }
             );
-            setDeathDate(member.deaths && member.deaths[0]?.date ? new Date(member.deaths[0].date) : null);
+            setDeathDate(member.death && member.death.date ? new Date(member.death.date) : null);
 
             // Autofill relationships from API if available
             if (member.relationships && member.relationships.length > 0) {
@@ -134,12 +136,14 @@ const EditMember = () => {
         const { marriages, ...formWithoutMarriages } = form;
         const payload = {
             ...formWithoutMarriages,
-            deaths: death.hasDied && death.date ? [{
-                date: death.date,
-                cause: death.cause,
-                place: death.place,
-                obituary: death.obituary
-            }] : [],
+            death: death.hasDied && death.date
+                ? {
+                    date: death.date,
+                    cause: death.cause,
+                    place: death.place,
+                    obituary: death.obituary
+                }
+                : null,
             relationships: relationships.filter(r => r.relative_id && r.relationship_type)
         };
         try {

@@ -1,6 +1,6 @@
 .login-bg-site {
     min-height: 100vh;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    background: linear-gradient(135deg, #fff7e6 0%, #ffe7e0 100%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -8,8 +8,8 @@
 
 .login-container-site {
     background: #fff;
-    border-radius: 16px;
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+    border-radius: 18px;
+    box-shadow: 0 8px 32px 0 rgba(255, 59, 63, 0.10);
     padding: 2.5rem 2.5rem 2rem 2.5rem;
     max-width: 350px;
     width: 100%;
@@ -18,10 +18,10 @@
 
 .login-title-site {
     font-size: 2rem;
-    font-weight: 700;
-    color: #6e8efb;
+    font-weight: 800;
+    color: #ff3b3f;
     margin-bottom: 1.5rem;
-    letter-spacing: 1px;
+    letter-spacing: -1px;
 }
 
 .login-form-site {
@@ -40,23 +40,23 @@
 }
 
 .login-input-site:focus {
-    border: 1.5px solid #a777e3;
+    border: 1.5px solid #ff3b3f;
 }
 
 .login-btn-site {
-    background: linear-gradient(90deg, #6e8efb 0%, #a777e3 100%);
+    background: linear-gradient(90deg, #ff3b3f 0%, #ffb347 100%);
     color: #fff;
     border: none;
     border-radius: 8px;
     padding: 0.8rem 1rem;
     font-size: 1.1rem;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
     transition: background 0.2s;
 }
 
 .login-btn-site:hover {
-    background: linear-gradient(90deg, #a777e3 0%, #6e8efb 100%);
+    background: linear-gradient(90deg, #ffb347 0%, #ff3b3f 100%);
 }
 
 .login-error-site {
@@ -66,7 +66,7 @@
 }
 
 .login-success-site {
-    color: #01a982;
+    color: #ff3b3f;
     margin-top: 0.5rem;
     font-size: 0.98rem;
 }
@@ -80,9 +80,9 @@
 .create-account-link {
     background: none;
     border: none;
-    color: #01a982;
+    color: #ff3b3f;
     font-size: 1rem;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
     text-decoration: underline;
     margin-top: 0.5rem;
@@ -90,5 +90,5 @@
 }
 
 .create-account-link:hover {
-    color: #01896d;
+    color: #ffb347;
 }

@@ -263,11 +263,32 @@ router.get("/members/:id", authenticate, authorize("view"), async (req, res) => 
       log("Family member not found:", req.params.id);
       return res.status(404).json({ error: "Family member not found" });
     }
-    log("Fetched member:", req.params.id);
     res.json(person);
   } catch (error) {
     logError("Error fetching family member:", error);
     res.status(500).json({ error: error.message || "Error fetching family member" });
+  }
+});
+
+// Delete a family member (editor/admin only, lineage check)
+router.delete("/members/:id", authenticate, authorize("edit"), async (req, res) => {
+  log("DELETE /members/:id called with id:", req.params.id);
+  const personId = parseInt(req.params.id, 10);
+  if (isNaN(personId)) {
+    logError("Invalid member ID for deletion:", req.params.id);
+    return res.status(400).json({ error: "Invalid member ID" });
+  }
+  try {
+    const deleted = await PersonService.deletePerson(personId, db);
+    if (!deleted) {
+      log("Family member not found for deletion:", personId);
+      return res.status(404).json({ error: "Family member not found" });
+    }
+    log("Family member deleted:", personId);
+    res.json({ message: "Family member deleted successfully!" });
+  } catch (error) {
+    logError("Error deleting family member:", error);
+    res.status(500).json({ error: error.message || "Error deleting family member" });
   }
 });
 
