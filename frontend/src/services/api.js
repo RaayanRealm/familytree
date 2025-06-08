@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 export const FAMILY_API_URL = `${API_BASE_URL}/family`;
 export const USER_API_URL = API_BASE_URL;
 
@@ -149,6 +149,29 @@ export const addMarriage = async ({ person_id, spouse_id, marriage_date, divorce
     divorce_date,
   }, { headers: { ...getAuthHeaders() } });
   return response.data;
+};
+
+// Fetch all members across all pages (background utility)
+export const fetchAllMembers = async (pageSize = 50) => {
+  let page = 1;
+  let allMembers = [];
+  let total = 0;
+  let keepGoing = true;
+  while (keepGoing) {
+    const data = await getFamilyMembersPaginated(page, pageSize);
+    if (data && data.members) {
+      allMembers = allMembers.concat(data.members);
+      total = data.total || 0;
+      if (allMembers.length >= total || data.members.length === 0) {
+        keepGoing = false;
+      } else {
+        page++;
+      }
+    } else {
+      keepGoing = false;
+    }
+  }
+  return allMembers;
 };
 
 // --- USER ENDPOINTS ---

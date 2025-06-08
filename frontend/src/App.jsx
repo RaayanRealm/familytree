@@ -15,6 +15,7 @@ import { useEffect, useState } from "react";
 import LoginPage from "./pages/LoginPage";
 import CreateAccount from "./pages/CreateAccount";
 import UserSettings from "./pages/UserSettings";
+import { MembersCacheProvider } from "./context/MembersCacheContext";
 
 function App() {
   const [user, setUser] = useState(() => {
@@ -32,26 +33,28 @@ function App() {
   }, []);
 
   return (
-    <Router>
-      <Header user={user} setUser={setUser} />
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<LoginPage setUser={setUser} />} />
-        <Route path="/create-account" element={<CreateAccount />} />
-        <Route path="/user/settings" element={<UserSettings />} />
-        <Route path="/member/:id" element={<MemberProfile />} />
-        <Route path="/add-member" element={user && (user.role === "admin" || user.role === "editor") ? <AddMember /> : <LoginPage setUser={setUser} />} />
-        <Route path="/add-marriage" element={user && (user.role === "admin" || user.role === "editor") ? <AddMarriage /> : <LoginPage setUser={setUser} />} />
-        <Route path="/events" element={<Events />} />
-        <Route path="/family/tree" element={<FamilyTree />} />
-        {/*<Route path="/family/maternal" element={<MaternalTree />} />
-        //<Route path="/search" element={<SearchPage />} /> */}
-        <Route path="/help/faq" element={<HelpFAQ />} />
-        <Route path="/help/about" element={<HelpAbout />} />
-        <Route path="/help/contact" element={<HelpContact />} />
-        <Route path="/edit-member/:id" element={user && (user.role === "admin" || user.role === "editor") ? <EditMember /> : <LoginPage setUser={setUser} />} />
-      </Routes>
-    </Router>
+    <MembersCacheProvider>
+      <Router>
+        <Header user={user} setUser={setUser} />
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<LoginPage setUser={setUser} />} />
+          <Route path="/create-account" element={<CreateAccount />} />
+          <Route path="/user/settings" element={<UserSettings />} />
+          <Route path="/member/:id" element={<MemberProfile />} />
+          <Route path="/add-member" element={user && (user.role === "admin" || user.role === "editor") ? <AddMember /> : <LoginPage setUser={setUser} />} />
+          <Route path="/add-marriage" element={user && (user.role === "admin" || user.role === "editor") ? <AddMarriage /> : <LoginPage setUser={setUser} />} />
+          <Route path="/events" element={<Events />} />
+          <Route path="/family/tree" element={<FamilyTree />} />
+          {/*<Route path="/family/maternal" element={<MaternalTree />} />
+          //<Route path="/search" element={<SearchPage />} /> */}
+          <Route path="/help/faq" element={<HelpFAQ />} />
+          <Route path="/help/about" element={<HelpAbout />} />
+          <Route path="/help/contact" element={<HelpContact />} />
+          <Route path="/edit-member/:id" element={user && (user.role === "admin" || user.role === "editor") ? <EditMember /> : <LoginPage setUser={setUser} />} />
+        </Routes>
+      </Router>
+    </MembersCacheProvider>
   );
 }
 

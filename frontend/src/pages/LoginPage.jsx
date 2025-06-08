@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./../styles/LoginPage.css";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 const FAMILY_API_URL = `${API_BASE_URL}/family`;
 
 const LoginPage = ({ setUser }) => {
@@ -49,7 +49,7 @@ const LoginPage = ({ setUser }) => {
     setError("");
     setSuccessMsg("");
     try {
-      const res = await fetch(`${FAMILY_API_URL}/users`, {
+      const res = await fetch(`${API_BASE_URL}/users`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

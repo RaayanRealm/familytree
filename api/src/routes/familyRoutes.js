@@ -238,6 +238,10 @@ router.get("/members", authenticate, authorize("view"), async (req, res) => {
   if (isNaN(page) || page < 1) page = 1;
   if (isNaN(limit) || limit < 1) limit = 50;
 
+  const cacheKey = `members_page_${page}_limit_${limit}`;
+  const cached = membersCache.get(cacheKey);
+  if (cached) return res.json(cached);
+
   try {
     // Get total count for pagination
     const total = await db("persons").count("id as count").first();
@@ -299,12 +303,14 @@ router.get("/members", authenticate, authorize("view"), async (req, res) => {
       return new PersonDTO(entity, death, marriages, relationships);
     });
 
-    res.json({
+    const response = {
       members: results,
       total: total.count || 0,
       page,
       limit
-    });
+    };
+    membersCache.set(cacheKey, response);
+    res.json(response);
   } catch (error) {
     res.status(500).json({ error: "Error fetching family members" });
   }

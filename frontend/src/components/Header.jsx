@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./../styles/Header.css";
 import Search from "./Search";
-import { getFamilyMembers } from "../services/api";
+import { getFamilyMembersPaginated } from "../services/api";
 import AsyncSelect from "react-select/async";
 import { FaSearch } from "react-icons/fa";
 
@@ -23,9 +23,9 @@ const Header = ({ user, setUser }) => {
     const [editMemberResults, setEditMemberResults] = useState([]);
 
     useEffect(() => {
-        getFamilyMembers().then(data => {
-            setMembers(data);
-            console.log('Loaded members:', data); // Debug: ensure members are loaded
+        getFamilyMembersPaginated(1, 50).then(data => {
+            setMembers(data.members || []);
+            console.log('Loaded members:', data.members); // Debug: ensure members are loaded
         });
     }, []);
 

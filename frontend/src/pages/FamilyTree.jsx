@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from "react";
-import { getFamilyTree, getFamilyMembers } from "../services/api";
+import React, { useState, useCallback, useEffect } from "react";
+import { getFamilyTree, getFamilyMembersPaginated } from "../services/api";
 import "../styles/FamilyTree.css";
 import Tree from "react-d3-tree";
 import { Link } from "react-router-dom";
@@ -93,8 +93,8 @@ const FamilyTree = () => {
     const [allMembers, setAllMembers] = useState([]);
 
     // Fetch all members for search
-    React.useEffect(() => {
-        getFamilyMembers().then(setAllMembers);
+    useEffect(() => {
+        getFamilyMembersPaginated(1, 50).then(data => setAllMembers(data.members || []));
     }, []);
 
     // react-select async search

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getFamilyMember, getFamilyMembers, updateFamilyMember } from "../services/api";
+import { getFamilyMember, getFamilyMembersPaginated, updateFamilyMember } from "../services/api";
 import "../styles/AddMember.css";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -42,7 +42,7 @@ const EditMember = () => {
             }
 
             // Start fetching all members in the background (for async select)
-            getFamilyMembers().then(setAllMembers);
+            getFamilyMembersPaginated(1, 50).then(data => setAllMembers(data.members || []));
         });
     }, [id]);
 
