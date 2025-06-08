@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { USER_API_URL } from "../services/api";
 import "./../styles/CreateAccount.css";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
 const CreateAccount = () => {
     const [form, setForm] = useState({
@@ -40,7 +39,7 @@ const CreateAccount = () => {
             if (form.profile_picture) {
                 formData.append("profile_picture_file", form.profile_picture);
             }
-            const res = await fetch(`${API_BASE_URL}/users`, {
+            const res = await fetch(USER_API_URL, {
                 method: "POST",
                 body: formData,
             });

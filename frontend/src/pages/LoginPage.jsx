@@ -1,16 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./../styles/LoginPage.css";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
-const FAMILY_API_URL = `${API_BASE_URL}/family`;
+import { FAMILY_API_URL } from "../services/api";
 
 const LoginPage = ({ setUser }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [showCreate, setShowCreate] = useState(false);
-  const [role, setRole] = useState("viewer");
-  const [memberId, setMemberId] = useState("");
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const [loading, setLoading] = useState(false);
@@ -36,39 +31,6 @@ const LoginPage = ({ setUser }) => {
         navigate("/");
       } else {
         setError(data.error || "Login failed");
-      }
-    } catch (err) {
-      setError("Network error");
-    }
-    setLoading(false);
-  };
-
-  const handleCreate = async e => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-    setSuccessMsg("");
-    try {
-      const res = await fetch(`${API_BASE_URL}/users`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username,
-          password,
-          role,
-          member_id: memberId ? Number(memberId) : null
-        })
-      });
-      const data = await res.json();
-      if (res.ok && data.user) {
-        setSuccessMsg("Account created! You can now sign in.");
-        setShowCreate(false);
-        setUsername("");
-        setPassword("");
-        setRole("viewer");
-        setMemberId("");
-      } else {
-        setError(data.error || "Account creation failed");
       }
     } catch (err) {
       setError("Network error");

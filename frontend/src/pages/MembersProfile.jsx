@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { getFamilyMember, getMemberRelations, getFamilyMembersPaginated } from "../services/api";
+import { getFamilyMember, getMemberRelations } from "../services/api";
 import "../styles/MembersProfile.css";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
 const formatDate = (dateStr) => {
   if (!dateStr) return "";
@@ -51,12 +49,10 @@ const MemberProfile = () => {
   const { id } = useParams();
   const [member, setMember] = useState(null);
   const [relations, setRelations] = useState([]);
-  const [allMembers, setAllMembers] = useState([]);
 
   useEffect(() => {
     getFamilyMember(id).then(setMember);
     getMemberRelations(id).then(setRelations);
-    getFamilyMembersPaginated(1, 50).then(data => setAllMembers(data.members || []));
   }, [id]);
 
   if (!member) return <p>Loading...</p>;
@@ -69,7 +65,7 @@ const MemberProfile = () => {
             member.profile_picture
               ? member.profile_picture.startsWith("http")
                 ? member.profile_picture
-                : `${API_BASE_URL}${member.profile_picture}`
+                : `${import.meta.env.VITE_API_BASE_URL || "http://localhost:5000"}${member.profile_picture}`
               : ""
           }
           alt={member.first_name}

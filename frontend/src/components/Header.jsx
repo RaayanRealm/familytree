@@ -1,9 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./../styles/Header.css";
-import Search from "./Search";
 import { getFamilyMembersPaginated } from "../services/api";
-import AsyncSelect from "react-select/async";
 import { FaSearch } from "react-icons/fa";
 
 const Header = ({ user, setUser }) => {
@@ -12,7 +10,6 @@ const Header = ({ user, setUser }) => {
     const menuRef = useRef();
 
     const [members, setMembers] = useState([]);
-    const [editMemberId, setEditMemberId] = useState("");
     const [addMenuOpen, setAddMenuOpen] = useState(false);
     const [helpMenuOpen, setHelpMenuOpen] = useState(false);
     const addMenuRef = useRef();
@@ -28,23 +25,6 @@ const Header = ({ user, setUser }) => {
             console.log('Loaded members:', data.members); // Debug: ensure members are loaded
         });
     }, []);
-
-    // For react-select async search
-    const loadMemberOptions = (inputValue, callback) => {
-        if (!inputValue) {
-            callback([]);
-            return;
-        }
-        const filtered = members
-            .filter(m =>
-                `${m.first_name} ${m.last_name}`.toLowerCase().includes(inputValue.toLowerCase())
-            )
-            .map(m => ({
-                value: m.id,
-                label: `${m.first_name} ${m.last_name}${m.current_location ? ` (${m.current_location})` : ""}`
-            }));
-        callback(filtered);
-    };
 
     const handleLogout = () => {
         localStorage.removeItem("token");

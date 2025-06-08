@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getFamilyMembers } from "../services/api";
+import { getFamilyMembers, FAMILY_API_URL } from "../services/api";
 import "../styles/AddMember.css";
 import AsyncSelect from "react-select/async";
 import DatePicker from "react-datepicker";
@@ -48,7 +48,7 @@ const AddMarriage = () => {
         }
         // Call backend API to add marriage (implement this endpoint in backend)
         try {
-            await fetch("http://localhost:5000/api/family/marriages", {
+            await fetch(`${FAMILY_API_URL}/marriages`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

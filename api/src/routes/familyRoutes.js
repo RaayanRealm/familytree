@@ -232,11 +232,11 @@ router.put("/members/:id", authenticate, authorize("edit"), (req, res, next) => 
 
 // Get all family members (viewer/editor/admin only) with pagination support
 router.get("/members", authenticate, authorize("view"), async (req, res) => {
-  let { page = 1, limit = 20 } = req.query;
+  let { page = 1, limit = 50 } = req.query;
   page = parseInt(page, 10);
   limit = parseInt(limit, 10);
   if (isNaN(page) || page < 1) page = 1;
-  if (isNaN(limit) || limit < 1) limit = 20;
+  if (isNaN(limit) || limit < 1) limit = 50;
 
   const cacheKey = `members_page_${page}_limit_${limit}`;
   const cached = membersCache.get(cacheKey);

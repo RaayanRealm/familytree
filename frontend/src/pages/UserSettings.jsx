@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./../styles/UserSettings.css";
-import { getFamilyMembersPaginated } from "../services/api";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
-
+import { getFamilyMembersPaginated, USER_API_URL } from "../services/api";
 
 const UserSettings = () => {
     const [user, setUser] = useState(() => {
@@ -43,7 +40,7 @@ const UserSettings = () => {
         async function fetchUser() {
             if (!user) return;
             try {
-                const res = await fetch(`${API_BASE_URL}/users/${user.id}`, {
+                const res = await fetch(`${USER_API_URL}/${user.id}`, {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem("token")}`,
                     },
@@ -70,7 +67,7 @@ const UserSettings = () => {
     // Fetch all users and members for role/member assignment
     useEffect(() => {
         if (showRoleAssign) {
-            fetch(`${API_BASE_URL}/users`, {
+            fetch(`${USER_API_URL}/users`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
             })
                 .then(res => res.json())
@@ -135,7 +132,7 @@ const UserSettings = () => {
             if (form.profile_picture) {
                 formData.append("profile_picture_file", form.profile_picture);
             }
-            const res = await fetch(`${API_BASE_URL}/users/${user.id}`, {
+            const res = await fetch(`${USER_API_URL}/${user.id}`, {
                 method: "PUT",
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -172,7 +169,7 @@ const UserSettings = () => {
             return;
         }
         try {
-            const res = await fetch(`${API_BASE_URL}/users/${user.id}`, {
+            const res = await fetch(`${USER_API_URL}/${user.id}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -206,7 +203,7 @@ const UserSettings = () => {
             if (selectedRole === "editor" && selectedMemberId) {
                 body.member_id = selectedMemberId;
             }
-            const res = await fetch(`${API_BASE_URL}/users/${selectedUserId}`, {
+            const res = await fetch(`${USER_API_URL}/${selectedUserId}`, {
                 method: "PUT",
                 headers: { Authorization: `Bearer ${localStorage.getItem("token")}`, "Content-Type": "application/json" },
                 body: JSON.stringify(body)
@@ -236,7 +233,7 @@ const UserSettings = () => {
                                 : form.profile_picture_url
                                     ? form.profile_picture_url.startsWith("http")
                                         ? form.profile_picture_url
-                                        : `${API_BASE_URL}${form.profile_picture_url}`
+                                        : `${import.meta.env.VITE_API_BASE_URL || "http://localhost:5000"}${form.profile_picture_url}`
                                     : "/default-profile.png"
                         }
                         alt="profile"

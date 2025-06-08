@@ -1,8 +1,8 @@
 import axios from "axios";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
-export const FAMILY_API_URL = `${API_BASE_URL}/family`;
-export const USER_API_URL = API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+export const FAMILY_API_URL = `${API_BASE_URL}/api/family`;
+export const USER_API_URL = `${API_BASE_URL}/api/users`;
 
 // Helper to get token from localStorage
 function getAuthHeaders() {
@@ -17,7 +17,7 @@ export const getFamilyMembers = async () => {
 };
 
 // Paginated fetch for family members
-export const getFamilyMembersPaginated = async (page = 1, limit = 50) => {
+export const getFamilyMembersPaginated = async (page = 1, limit = 10) => {
   const response = await axios.get(`${FAMILY_API_URL}/members`, {
     params: { page, limit },
     headers: { ...getAuthHeaders() }
@@ -152,7 +152,7 @@ export const addMarriage = async ({ person_id, spouse_id, marriage_date, divorce
 };
 
 // Fetch all members across all pages (background utility)
-export const fetchAllMembers = async (pageSize = 50) => {
+export const fetchAllMembers = async (pageSize = 10) => {
   let page = 1;
   let allMembers = [];
   let total = 0;
