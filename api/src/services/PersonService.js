@@ -19,15 +19,54 @@ class PersonService {
 
     static async getAllPersons(db) {
         this.debug("getAllPersons called");
+        // 1. Fetch all persons
         const rows = await db("persons").select("*");
-        const results = [];
-        for (const row of rows) {
-            const entity = new PersonEntity(row);
-            const death = await this.getDeathForPerson(entity.id, db);
-            const marriages = await this.getMarriagesForPerson(entity.id, db);
-            const relationships = await this.getRelationshipsForPerson(entity.id, db);
-            results.push(new PersonDTO(entity, death, marriages, relationships));
+        const personIds = rows.map(row => row.id);
+
+        // 2. Fetch all deaths in one query
+        const deaths = await db("deaths").whereIn("person_id", personIds).select("*");
+        const deathsByPerson = {};
+        for (const d of deaths) deathsByPerson[d.person_id] = new DeathDTO(new DeathEntity(d));
+
+        // 3. Fetch all marriages in one query
+        const marriages = await db("marriages").where(function () {
+            this.whereIn("person_id", personIds).orWhereIn("spouse_id", personIds);
+        }).select("*");
+        const marriagesByPerson = {};
+        for (const id of personIds) {
+            marriagesByPerson[id] = marriages
+                .filter(m => m.person_id === id || m.spouse_id === id)
+                .map(m => new MarriageDTO(new MarriageEntity(m)));
         }
+
+        // 4. Fetch all relationships in one query (with relative names)
+        const relationships = await db("relationships")
+            .whereIn("person_id", personIds)
+            .join("persons", "relationships.relative_id", "persons.id")
+            .select(
+                "relationships.*",
+                "persons.first_name as relative_first_name",
+                "persons.last_name as relative_last_name"
+            );
+        const relationshipsByPerson = {};
+        for (const id of personIds) {
+            relationshipsByPerson[id] = relationships
+                .filter(r => r.person_id === id)
+                .map(r => {
+                    const entity = new RelationshipEntity(r);
+                    const relativeName = `${r.relative_first_name} ${r.relative_last_name}`;
+                    return new RelationshipDTO(entity, relativeName);
+                });
+        }
+
+        // 5. Assemble DTOs
+        const results = rows.map(row => {
+            const entity = new PersonEntity(row);
+            const death = deathsByPerson[entity.id] || null;
+            const marriages = marriagesByPerson[entity.id] || [];
+            const relationships = relationshipsByPerson[entity.id] || [];
+            return new PersonDTO(entity, death, marriages, relationships);
+        });
         this.info("getAllPersons returning", results.length, "members");
         return results;
     }
