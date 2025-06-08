@@ -20,7 +20,7 @@ const Header = ({ user, setUser }) => {
     const [editMemberResults, setEditMemberResults] = useState([]);
 
     useEffect(() => {
-        getFamilyMembersPaginated(1, 50).then(data => {
+        getFamilyMembersPaginated().then(data => {
             setMembers(data.members || []);
             console.log('Loaded members:', data.members); // Debug: ensure members are loaded
         });

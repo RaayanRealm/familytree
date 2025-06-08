@@ -42,7 +42,7 @@ const EditMember = () => {
             }
 
             // Start fetching all members in the background (for async select)
-            getFamilyMembersPaginated(1, 50).then(data => setAllMembers(data.members || []));
+            getFamilyMembersPaginated().then(data => setAllMembers(data.members || []));
         });
     }, [id]);
 

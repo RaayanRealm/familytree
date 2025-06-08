@@ -45,7 +45,7 @@ const AddMember = () => {
 
     useEffect(() => {
         // Fetch first page of members for relationship selection
-        getFamilyMembersPaginated(1, 50).then(data => setAllMembers(data.members || []));
+        getFamilyMembersPaginated().then(data => setAllMembers(data.members || []));
     }, []);
 
     const handleChange = (e) => {

@@ -72,7 +72,7 @@ const UserSettings = () => {
             })
                 .then(res => res.json())
                 .then(data => setAllUsers(data.users || []));
-            getFamilyMembersPaginated(1, 50).then(data => setAllMembers(data.members || []));
+            getFamilyMembersPaginated().then(data => setAllMembers(data.members || []));
         }
     }, [showRoleAssign]);
 

@@ -94,7 +94,7 @@ const FamilyTree = () => {
 
     // Fetch all members for search
     useEffect(() => {
-        getFamilyMembersPaginated(1, 50).then(data => setAllMembers(data.members || []));
+        getFamilyMembersPaginated().then(data => setAllMembers(data.members || []));
     }, []);
 
     // react-select async search
