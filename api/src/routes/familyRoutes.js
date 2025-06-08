@@ -16,6 +16,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const session = require("express-session");
 const UserService = require("../services/UserService");
+const NodeCache = require("node-cache");
 const isDev = process.env.DEV === "true";
 
 // Multer setup for image uploads
@@ -32,6 +33,7 @@ const storage = multer.diskStorage({
   }
 });
 const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
+const membersCache = new NodeCache({ stdTTL: 300 }); // cache for 5 minutes
 
 if (!isDev) {
   cloudinary.config({
@@ -230,13 +232,13 @@ router.put("/members/:id", authenticate, authorize("edit"), (req, res, next) => 
 
 // Get all family members (viewer/editor/admin only)
 router.get("/members", authenticate, authorize("view"), async (req, res) => {
-  log("GET /members called");
+  let cached = membersCache.get("allMembers");
+  if (cached) return res.json(cached);
   try {
     const family = await PersonService.getAllPersons(db);
-    log("Fetched family members:", family.length);
+    membersCache.set("allMembers", family);
     res.json(family);
   } catch (error) {
-    logError("Error fetching family members:", error);
     res.status(500).json({ error: "Error fetching family members" });
   }
 });
