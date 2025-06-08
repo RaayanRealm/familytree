@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { getFamilyMember, getMemberRelations } from "../services/api";
 import "../styles/MembersProfile.css";
+import { FaEdit } from "react-icons/fa";
 
 const formatDate = (dateStr) => {
   if (!dateStr) return "";
@@ -49,6 +50,8 @@ const MemberProfile = () => {
   const { id } = useParams();
   const [member, setMember] = useState(null);
   const [relations, setRelations] = useState([]);
+  const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem("user") || "null");
 
   useEffect(() => {
     getFamilyMember(id).then(setMember);
@@ -59,7 +62,32 @@ const MemberProfile = () => {
 
   return (
     <div className="member-profile">
-      <div className="profile-header">
+      <div className="profile-header" style={{ position: "relative" }}>
+        {/* Edit button for admin/editor, styled as icon button */}
+        {user && (user.role === "admin" || user.role === "editor") && (
+          <button
+            className="edit-member-icon-btn"
+            title="Edit Member"
+            style={{
+              position: "absolute",
+              top: 16,
+              right: 16,
+              background: "rgba(255,255,255,0.85)",
+              border: "none",
+              borderRadius: "50%",
+              padding: 8,
+              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+              cursor: "pointer",
+              zIndex: 2,
+              transition: "background 0.2s"
+            }}
+            onClick={() => navigate(`/edit-member/${id}`)}
+            onMouseOver={e => (e.currentTarget.style.background = "#e0e7ef")}
+            onMouseOut={e => (e.currentTarget.style.background = "rgba(255,255,255,0.85)")}
+          >
+            <FaEdit size={20} color="#2d5fa7" />
+          </button>
+        )}
         <img
           src={
             member.profile_picture

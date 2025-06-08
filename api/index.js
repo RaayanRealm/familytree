@@ -31,9 +31,11 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Use root path for user routes and /family for family routes to avoid double /api on Vercel
+// Always mount both /api/* and root-level routes for compatibility
 app.use("/api", UserRoutes);
 app.use("/api/family", familyRoutes);
+app.use("/family", familyRoutes);
+app.use("/users", UserRoutes);
 
 // Serve images locally only; Vercel serves from /public automatically
 if (process.env.VERCEL !== "true") {

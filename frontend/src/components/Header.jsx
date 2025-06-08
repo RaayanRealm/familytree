@@ -16,8 +16,6 @@ const Header = ({ user, setUser }) => {
     const helpMenuRef = useRef();
     const [searchValue, setSearchValue] = useState("");
     const [searchResults, setSearchResults] = useState([]);
-    const [editMemberSearch, setEditMemberSearch] = useState("");
-    const [editMemberResults, setEditMemberResults] = useState([]);
 
     useEffect(() => {
         getFamilyMembersPaginated().then(data => {
@@ -79,27 +77,6 @@ const Header = ({ user, setUser }) => {
         navigate(`/member/${memberId}`);
     };
 
-    // Edit member search logic
-    const handleEditMemberSearchChange = (e) => {
-        const val = e.target.value;
-        setEditMemberSearch(val);
-        if (val.length > 1 && members.length > 0) {
-            setEditMemberResults(
-                members.filter(m =>
-                    `${m.first_name} ${m.last_name}`.toLowerCase().includes(val.toLowerCase())
-                ).slice(0, 7)
-            );
-        } else {
-            setEditMemberResults([]);
-        }
-    };
-
-    const handleEditMemberSelect = (memberId) => {
-        setEditMemberSearch("");
-        setEditMemberResults([]);
-        navigate(`/edit-member/${memberId}`);
-    };
-
     return (
         <header className="header" style={{ zIndex: 3000 }}>
             <div className="logo-title">
@@ -135,40 +112,6 @@ const Header = ({ user, setUser }) => {
                                         <Link to="/add-marriage" className="add-member-header-btn" onClick={() => setAddMenuOpen(false)}>
                                             Add Marriage
                                         </Link>
-                                    </li>
-                                    <li style={{ minWidth: 220, zIndex: 3300 }}>
-                                        {/* Edit Member modern search box */}
-                                        <div className="modern-search-box" style={{ zIndex: 3400 }}>
-                                            <FaSearch className="modern-search-icon" />
-                                            <input
-                                                type="text"
-                                                className="modern-search-input"
-                                                placeholder="Edit member..."
-                                                value={editMemberSearch}
-                                                onChange={handleEditMemberSearchChange}
-                                                autoComplete="off"
-                                                style={{ paddingLeft: 36 }}
-                                            />
-                                            {editMemberResults.length > 0 && (
-                                                <div className="modern-search-dropdown" style={{ zIndex: 3500 }}>
-                                                    {editMemberResults.map(m => (
-                                                        <div
-                                                            key={m.id}
-                                                            className="modern-search-item"
-                                                            onMouseDown={() => {
-                                                                handleEditMemberSelect(m.id);
-                                                                setAddMenuOpen(false);
-                                                            }}
-                                                        >
-                                                            {m.first_name} {m.last_name}
-                                                            {m.current_location ? (
-                                                                <span style={{ color: "#888", fontSize: "0.7em" }}> ({m.current_location})</span>
-                                                            ) : null}
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </div>
                                     </li>
                                 </ul>
                             )}
