@@ -3,6 +3,7 @@ import "./../styles/UserSettings.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
+
 const UserSettings = () => {
     const [user, setUser] = useState(() => {
         const u = localStorage.getItem("user");
@@ -41,7 +42,7 @@ const UserSettings = () => {
         async function fetchUser() {
             if (!user) return;
             try {
-                const res = await fetch(`${API_BASE_URL}/api/users/${user.id}`, {
+                const res = await fetch(`${API_BASE_URL}/users/${user.id}`, {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem("token")}`,
                     },
@@ -68,12 +69,12 @@ const UserSettings = () => {
     // Fetch all users and members for role/member assignment
     useEffect(() => {
         if (showRoleAssign) {
-            fetch(`${API_BASE_URL}/api/users`, {
+            fetch(`${API_BASE_URL}/users`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
             })
                 .then(res => res.json())
                 .then(data => setAllUsers(data.users || []));
-            fetch(`${API_BASE_URL}/api/family/members`, {
+            fetch(`${API_BASE_URL}/family/members`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
             })
                 .then(res => res.json())
@@ -137,7 +138,7 @@ const UserSettings = () => {
             if (form.profile_picture) {
                 formData.append("profile_picture_file", form.profile_picture);
             }
-            const res = await fetch(`${API_BASE_URL}/api/users/${user.id}`, {
+            const res = await fetch(`${API_BASE_URL}/users/${user.id}`, {
                 method: "PUT",
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -174,7 +175,7 @@ const UserSettings = () => {
             return;
         }
         try {
-            const res = await fetch(`${API_BASE_URL}/api/users/${user.id}`, {
+            const res = await fetch(`${API_BASE_URL}/users/${user.id}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -208,7 +209,7 @@ const UserSettings = () => {
             if (selectedRole === "editor" && selectedMemberId) {
                 body.member_id = selectedMemberId;
             }
-            const res = await fetch(`${API_BASE_URL}/api/users/${selectedUserId}`, {
+            const res = await fetch(`${API_BASE_URL}/users/${selectedUserId}`, {
                 method: "PUT",
                 headers: { Authorization: `Bearer ${localStorage.getItem("token")}`, "Content-Type": "application/json" },
                 body: JSON.stringify(body)

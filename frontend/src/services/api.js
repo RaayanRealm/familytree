@@ -1,7 +1,8 @@
 import axios from "axios";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
-const API_URL = `${API_BASE_URL}/family`;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+export const FAMILY_API_URL = `${API_BASE_URL}/family`;
+export const USER_API_URL = API_BASE_URL;
 
 // Helper to get token from localStorage
 function getAuthHeaders() {
@@ -9,18 +10,19 @@ function getAuthHeaders() {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+// --- FAMILY ENDPOINTS ---
 export const getFamilyMembers = async () => {
-  const response = await axios.get(`${API_URL}/members`, { headers: { ...getAuthHeaders() } });
+  const response = await axios.get(`${FAMILY_API_URL}/members`, { headers: { ...getAuthHeaders() } });
   return response.data;
 };
 
 export const getFamilyMember = async (id) => {
-  const response = await axios.get(`${API_URL}/members/${id}`, { headers: { ...getAuthHeaders() } });
+  const response = await axios.get(`${FAMILY_API_URL}/members/${id}`, { headers: { ...getAuthHeaders() } });
   return response.data;
 };
 
 export const getMemberRelations = async (id) => {
-  const response = await axios.get(`${API_URL}/relationships/${id}`, { headers: { ...getAuthHeaders() } });
+  const response = await axios.get(`${FAMILY_API_URL}/relationships/${id}`, { headers: { ...getAuthHeaders() } });
   return response.data.map(relation => ({
     id: relation.relative_id,
     name: `${relation.relative_name}`,
@@ -29,7 +31,7 @@ export const getMemberRelations = async (id) => {
 };
 
 export const getRelationships = async () => {
-  const response = await axios.get(`${API_URL}/relationships`, { headers: { ...getAuthHeaders() } });
+  const response = await axios.get(`${FAMILY_API_URL}/relationships`, { headers: { ...getAuthHeaders() } });
   return response.data;
 };
 
@@ -54,13 +56,13 @@ export const addFamilyMember = async (data) => {
     // Remove profile_picture from data, will be set by backend
     const { profile_picture, ...rest } = data;
     formData.append("personData", JSON.stringify(rest));
-    const response = await axios.post(`${API_URL}/members`, formData, {
+    const response = await axios.post(`${FAMILY_API_URL}/members`, formData, {
       headers: { "Content-Type": "multipart/form-data", ...getAuthHeaders() }
     });
     return response.data;
   } else {
     // Send as JSON (no file upload)
-    const response = await axios.post(`${API_URL}/members`, data, { headers: { ...getAuthHeaders() } });
+    const response = await axios.post(`${FAMILY_API_URL}/members`, data, { headers: { ...getAuthHeaders() } });
     return response.data;
   }
 };
@@ -84,54 +86,54 @@ export const updateFamilyMember = async (id, data) => {
     formData.append("profile_picture_file", file);
     const { profile_picture, ...rest } = data;
     formData.append("personData", JSON.stringify(rest));
-    const response = await axios.put(`${API_URL}/members/${id}`, formData, {
+    const response = await axios.put(`${FAMILY_API_URL}/members/${id}`, formData, {
       headers: { "Content-Type": "multipart/form-data", ...getAuthHeaders() }
     });
     return response.data;
   } else {
     // Send as JSON (no file upload)
-    const response = await axios.put(`${API_URL}/members/${id}`, data, { headers: { ...getAuthHeaders() } });
+    const response = await axios.put(`${FAMILY_API_URL}/members/${id}`, data, { headers: { ...getAuthHeaders() } });
     return response.data;
   }
 };
 
 export const deleteFamilyMember = async (id) => {
-  const response = await axios.delete(`${API_URL}/members/${id}`, { headers: { ...getAuthHeaders() } });
+  const response = await axios.delete(`${FAMILY_API_URL}/members/${id}`, { headers: { ...getAuthHeaders() } });
   return response.data;
 };
 
 export const getRecentMembers = async () => {
-  const response = await axios.get(`${API_URL}/members/recent`, { headers: { ...getAuthHeaders() } });
+  const response = await axios.get(`${FAMILY_API_URL}/members/recent`, { headers: { ...getAuthHeaders() } });
   return response.data.slice(0, 5); // Return only the last 5 members
 };
 
 export const getFamilyEvents = async () => {
-  const response = await axios.get(`${API_URL}/events`, { headers: { ...getAuthHeaders() } });
+  const response = await axios.get(`${FAMILY_API_URL}/events`, { headers: { ...getAuthHeaders() } });
   return response.data;
 };
 
 export const getHelpFAQ = async () => {
-  const response = await axios.get(`${API_URL}/help/faq`, { headers: { ...getAuthHeaders() } });
+  const response = await axios.get(`${FAMILY_API_URL}/help/faq`, { headers: { ...getAuthHeaders() } });
   return response.data;
 };
 
 export const getHelpAbout = async () => {
-  const response = await axios.get(`${API_URL}/help/about`, { headers: { ...getAuthHeaders() } });
+  const response = await axios.get(`${FAMILY_API_URL}/help/about`, { headers: { ...getAuthHeaders() } });
   return response.data.about;
 };
 
 export const getHelpContact = async () => {
-  const response = await axios.get(`${API_URL}/help/contact`, { headers: { ...getAuthHeaders() } });
+  const response = await axios.get(`${FAMILY_API_URL}/help/contact`, { headers: { ...getAuthHeaders() } });
   return response.data.contact;
 };
 
 export const getFamilyTree = async (personId) => {
-  const response = await axios.get(`${API_URL}/tree/${personId}`, { headers: { ...getAuthHeaders() } });
+  const response = await axios.get(`${FAMILY_API_URL}/tree/${personId}`, { headers: { ...getAuthHeaders() } });
   return response.data;
 };
 
 export const addMarriage = async ({ person_id, spouse_id, marriage_date, divorce_date }) => {
-  const response = await axios.post(`${API_URL}/marriages`, {
+  const response = await axios.post(`${FAMILY_API_URL}/marriages`, {
     person_id,
     spouse_id,
     marriage_date,
@@ -139,3 +141,7 @@ export const addMarriage = async ({ person_id, spouse_id, marriage_date, divorce
   }, { headers: { ...getAuthHeaders() } });
   return response.data;
 };
+
+// --- USER ENDPOINTS ---
+// Add user-related API calls here as needed, e.g.:
+// export const createUser = async (data) => { ... }
