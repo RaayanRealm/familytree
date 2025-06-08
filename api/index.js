@@ -6,7 +6,29 @@ const path = require("path");
 require('dotenv').config({ path: __dirname + '/.env' });
 
 const app = express();
-app.use(cors());
+
+const allowedOrigins = [
+    "https://familytree-gamma.vercel.app",
+    "http://localhost:3000",
+    "http://localhost:5000",
+    "http://127.0.0.1:5173",
+    "http://localhost:5173"
+];
+app.use(cors({
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps, curl, etc.)
+        if (!origin) return callback(null, true);
+        // Allow all localhost variations and Vercel frontend
+        if (
+            allowedOrigins.includes(origin) ||
+            /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)
+        ) {
+            return callback(null, true);
+        }
+        return callback(new Error('Not allowed by CORS: ' + origin));
+    },
+    credentials: true,
+}));
 app.use(express.json());
 
 // Use root path for user routes and /family for family routes to avoid double /api on Vercel

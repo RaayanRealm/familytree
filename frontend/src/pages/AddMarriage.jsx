@@ -16,7 +16,9 @@ const AddMarriage = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        getFamilyMembers().then(setAllMembers);
+        getFamilyMembers()
+            .then(data => setAllMembers(Array.isArray(data) ? data : (data && data.members ? data.members : [])))
+            .catch(() => setAllMembers([]));
     }, []);
 
     const loadMemberOptions = (inputValue, callback) => {
@@ -24,14 +26,12 @@ const AddMarriage = () => {
             callback([]);
             return;
         }
-        const filtered = allMembers
-            .filter(m =>
-                `${m.first_name} ${m.last_name}`.toLowerCase().includes(inputValue.toLowerCase())
-            )
-            .map(m => ({
-                value: m.id,
-                label: `${m.first_name} ${m.last_name}`
-            }));
+        const filtered = (allMembers || []).filter(m =>
+            `${m.first_name} ${m.last_name}`.toLowerCase().includes(inputValue.toLowerCase())
+        ).map(m => ({
+            value: m.id,
+            label: `${m.first_name} ${m.last_name}`
+        }));
         callback(filtered);
     };
 
