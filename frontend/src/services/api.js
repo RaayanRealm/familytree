@@ -1,8 +1,10 @@
 import axios from "axios";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
-export const FAMILY_API_URL = `${API_BASE_URL}/api/family`;
-export const USER_API_URL = `${API_BASE_URL}/api/users`;
+// Detect Vercel: VITE_VERCEL env or vercel.app in hostname
+const isVercel = import.meta.env.VITE_VERCEL === "true" || (typeof window !== "undefined" && window.location.hostname.includes("vercel.app"));
+export const FAMILY_API_URL = isVercel ? `${API_BASE_URL}/family` : `${API_BASE_URL}/api/family`;
+export const USER_API_URL = isVercel ? `${API_BASE_URL}/users` : `${API_BASE_URL}/api/users`;
 
 // Helper to get token from localStorage
 function getAuthHeaders() {
