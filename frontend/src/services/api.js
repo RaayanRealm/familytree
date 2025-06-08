@@ -1,7 +1,7 @@
 import axios from "axios";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
-const API_URL = `${API_BASE_URL}/family`; // Adjust backend URL if needed
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/family";
+const API_URL = `${API_BASE_URL}`; // Already points to /family endpoints
 
 // Helper to get token from localStorage
 function getAuthHeaders() {
