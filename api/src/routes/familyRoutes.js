@@ -230,14 +230,81 @@ router.put("/members/:id", authenticate, authorize("edit"), (req, res, next) => 
   }
 });
 
-// Get all family members (viewer/editor/admin only)
+// Get all family members (viewer/editor/admin only) with pagination support
 router.get("/members", authenticate, authorize("view"), async (req, res) => {
-  let cached = membersCache.get("allMembers");
-  if (cached) return res.json(cached);
+  let { page = 1, limit = 50 } = req.query;
+  page = parseInt(page, 10);
+  limit = parseInt(limit, 10);
+  if (isNaN(page) || page < 1) page = 1;
+  if (isNaN(limit) || limit < 1) limit = 50;
+
   try {
-    const family = await PersonService.getAllPersons(db);
-    membersCache.set("allMembers", family);
-    res.json(family);
+    // Get total count for pagination
+    const total = await db("persons").count("id as count").first();
+    // Get paginated persons
+    const persons = await db("persons")
+      .select("*")
+      .orderBy("id")
+      .limit(limit)
+      .offset((page - 1) * limit);
+    const personIds = persons.map(row => row.id);
+
+    // Fetch deaths, marriages, relationships in bulk for these persons
+    const deaths = await db("deaths").whereIn("person_id", personIds).select("*");
+    const deathsByPerson = {};
+    for (const d of deaths) deathsByPerson[d.person_id] = d;
+
+    const marriages = await db("marriages").where(function () {
+      this.whereIn("person_id", personIds).orWhereIn("spouse_id", personIds);
+    }).select("*");
+    const marriagesByPerson = {};
+    for (const id of personIds) {
+      marriagesByPerson[id] = marriages
+        .filter(m => m.person_id === id || m.spouse_id === id);
+    }
+
+    const relationships = await db("relationships")
+      .whereIn("person_id", personIds)
+      .join("persons", "relationships.relative_id", "persons.id")
+      .select(
+        "relationships.*",
+        "persons.first_name as relative_first_name",
+        "persons.last_name as relative_last_name"
+      );
+    const relationshipsByPerson = {};
+    for (const id of personIds) {
+      relationshipsByPerson[id] = relationships
+        .filter(r => r.person_id === id);
+    }
+
+    // Assemble DTOs (use PersonService if needed)
+    const results = persons.map(row => {
+      const entity = new (require("../entities/PersonEntity"))(row);
+      const DeathDTO = require("../dtos/DeathDTO");
+      const DeathEntity = require("../entities/DeathEntity");
+      const MarriageDTO = require("../dtos/MarriageDTO");
+      const MarriageEntity = require("../entities/MarriageEntity");
+      const RelationshipDTO = require("../dtos/RelationshipDTO");
+      const RelationshipEntity = require("../entities/RelationshipEntity");
+      const PersonDTO = require("../dtos/PersonDTO");
+      const death = deathsByPerson[entity.id]
+        ? new DeathDTO(new DeathEntity(deathsByPerson[entity.id]))
+        : null;
+      const marriages = (marriagesByPerson[entity.id] || []).map(m => new MarriageDTO(new MarriageEntity(m)));
+      const relationships = (relationshipsByPerson[entity.id] || []).map(r => {
+        const entityR = new RelationshipEntity(r);
+        const relativeName = `${r.relative_first_name} ${r.relative_last_name}`;
+        return new RelationshipDTO(entityR, relativeName);
+      });
+      return new PersonDTO(entity, death, marriages, relationships);
+    });
+
+    res.json({
+      members: results,
+      total: total.count || 0,
+      page,
+      limit
+    });
   } catch (error) {
     res.status(500).json({ error: "Error fetching family members" });
   }

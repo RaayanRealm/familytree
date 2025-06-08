@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./../styles/UserSettings.css";
+import { getFamilyMembersPaginated } from "../services/api";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
@@ -74,11 +75,7 @@ const UserSettings = () => {
             })
                 .then(res => res.json())
                 .then(data => setAllUsers(data.users || []));
-            fetch(`${API_BASE_URL}/family/members`, {
-                headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-            })
-                .then(res => res.json())
-                .then(data => setAllMembers(data || []));
+            getFamilyMembersPaginated(1, 50).then(data => setAllMembers(data.members || []));
         }
     }, [showRoleAssign]);
 

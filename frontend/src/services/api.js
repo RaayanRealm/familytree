@@ -16,6 +16,15 @@ export const getFamilyMembers = async () => {
   return response.data;
 };
 
+// Paginated fetch for family members
+export const getFamilyMembersPaginated = async (page = 1, limit = 50) => {
+  const response = await axios.get(`${FAMILY_API_URL}/members`, {
+    params: { page, limit },
+    headers: { ...getAuthHeaders() }
+  });
+  return response.data; // { members, total, page, limit }
+};
+
 export const getFamilyMember = async (id) => {
   const response = await axios.get(`${FAMILY_API_URL}/members/${id}`, { headers: { ...getAuthHeaders() } });
   return response.data;

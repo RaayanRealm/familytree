@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { addFamilyMember, getFamilyMembers } from "../services/api";
+import { addFamilyMember, getFamilyMembersPaginated } from "../services/api";
 import "../styles/AddMember.css";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -44,8 +44,8 @@ const AddMember = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        // Fetch all members for relationship selection
-        getFamilyMembers().then(setAllMembers);
+        // Fetch first page of members for relationship selection
+        getFamilyMembersPaginated(1, 50).then(data => setAllMembers(data.members || []));
     }, []);
 
     const handleChange = (e) => {
