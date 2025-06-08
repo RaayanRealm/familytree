@@ -15,7 +15,11 @@ app.use("/images", express.static(path.join(__dirname, "public/images")));
 
 const PORT = process.env.PORT || 5000;
 
-// Always start the server for local/dev, but do NOT export a handler for Vercel here.
-// Vercel should use its own entrypoint (api/family.js or similar).
-const server = app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
-module.exports = server;
+if (process.env.VERCEL === "true") {
+    // Vercel serverless: export handler
+    module.exports = app;
+} else {
+    // Local dev: start server
+    const server = app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+    module.exports = server;
+}
