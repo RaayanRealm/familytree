@@ -1,7 +1,7 @@
 require('dotenv').config({ path: __dirname + '/../../.env' });
 const knex = require("knex");
 
-const isDev = process.env.DEV === "true";
+const isDev = process.env.PGDEV === "true";
 
 const db = knex({
   client: "pg",
